@@ -1,8 +1,8 @@
-import { expect } from 'chai';
-import Graph, { Vertex, Edge } from '../misc/graph';
-import { kosaraju } from '../algos/kosaraju';
+import { expect } from "chai";
+import Graph, { Vertex, Edge } from "../misc/graph";
+import { kosaraju } from "../algos/kosaraju";
 
-describe("Traversal", () => {
+describe("SCCS", () => {
   let vertices: Array<Vertex> = [];
   for (let i: number = 0; i < 5; i++) {
     vertices.push(new Vertex(i));
@@ -19,6 +19,6 @@ describe("Traversal", () => {
   it("#SCC - kosaraju", () => {
     expect(vertices.length).to.equal(5);
     expect(edges.length).to.equal(5);
-    const tree: any = kosaraju(g);
-  })
-})
+    // const tree: any = kosaraju(g);
+  });
+});

@@ -1,13 +1,12 @@
 /*
-* @author: yonglu.syl@gmail.com
-*/
-
+ * @author: yonglu.syl@gmail.com
+ */
 
 /*
-* @param: {number} id
-* @param: {object} opts
-* @return: {Vertex}
-*/
+ * @param: {number} id
+ * @param: {object} opts
+ * @return: {Vertex}
+ */
 export class Vertex {
   private _id: number;
   private opts: object;
@@ -18,10 +17,10 @@ export class Vertex {
     this.adjacents = [];
   }
   /*
-  * Adding edge which current vertext incident to
-  * @param: {Edge} e
-  * @return: {boolean}
-  */
+   * Adding edge which current vertext incident to
+   * @param: {Edge} e
+   * @return: {boolean}
+   */
   public add(e: Edge): boolean {
     if (this.adjacents.indexOf(e) == -1) {
       this.adjacents.push(e);
@@ -29,10 +28,10 @@ export class Vertex {
     return true;
   }
   /*
-  * Removing edge which current vertext incident to
-  * @param: {Edge} e
-  * @return: {boolean}
-  */
+   * Removing edge which current vertext incident to
+   * @param: {Edge} e
+   * @return: {boolean}
+   */
   public remove(e: Edge): boolean {
     const idx: number = this.adjacents.indexOf(e);
     if (idx > -1) {
@@ -41,8 +40,8 @@ export class Vertex {
     return true;
   }
   /*
-  * return all the edges which current vertex is incident to
-  */
+   * return all the edges which current vertex is incident to
+   */
   get edges(): Array<Edge> {
     return this.adjacents;
   }
@@ -51,23 +50,24 @@ export class Vertex {
   }
 }
 
-
 /*
-* Edge class: immutable
-* @param: {Vertex} source -- endvertex
-* @param: {Vertex} target -- endvertex
-*/
+ * Edge class: immutable
+ * @param: {Vertex} source -- endvertex
+ * @param: {Vertex} target -- endvertex
+ */
 export class Edge {
   private source: Vertex;
   private target: Vertex;
-  constructor(source: Vertex, target: Vertex) {
+  private _options: object;
+  constructor(source: Vertex, target: Vertex, opts?: object) {
     this.source = source;
     this.target = target;
+    this._options = opts;
   }
   /*
-  * Returning upstream end vertex
-  * @return: {Vertex}
-  */
+   * Returning upstream end vertex
+   * @return: {Vertex}
+   */
   get up(): Vertex {
     return this.source;
   }
@@ -75,22 +75,24 @@ export class Edge {
     this.source = v;
   }
   /*
-  * Returning downstream end vertex
-  * @return: {Vertex}
-  */
+   * Returning downstream end vertex
+   * @return: {Vertex}
+   */
   get down(): Vertex {
     return this.target;
   }
   set down(v: Vertex) {
     this.target = v;
   }
+  get options(): object {
+    return this._options;
+  }
 }
 
-
 /*
-* Common Graph class Representation, accepting vertices and edges
-* @param: {Array<Vertex>} vertices
-*/
+ * Common Graph class Representation, accepting vertices and edges
+ * @param: {Array<Vertex>} vertices
+ */
 export default class Graph {
   private _vertices: Array<Vertex> = [];
   private _edges: Array<Edge> = [];
@@ -105,7 +107,11 @@ export default class Graph {
     return this._vertices.indexOf(v);
   }
   hasVertex(v: Vertex): boolean {
-    return this.findVertex(v) > -1;
+    let hasV: boolean = this.findVertex(v) > -1;
+    this._vertices.map(_v => {
+      if (_v.id === v.id) hasV = true;
+    });
+    return hasV;
   }
   addVertex(v: Vertex) {
     if (!this.hasVertex(v)) {
@@ -118,7 +124,7 @@ export default class Graph {
       this._vertices.splice(rmIdx, 1);
       v.edges.map(edge => {
         this.removeEdge(edge);
-      })
+      });
       return v;
     }
     return null;
@@ -129,12 +135,18 @@ export default class Graph {
     const down: Vertex = edge.down;
     up.edges.map(e => {
       if (e.down == down) exist = true;
-      !this.opts.directed && e.up == edge.down && e.down == edge.up && (exist = true);
-    })
+      !this.opts.directed &&
+        e.up == edge.down &&
+        e.down == edge.up &&
+        (exist = true);
+    });
     down.edges.map(e => {
       if (e.up == up) exist = true;
-      !this.opts.directed && e.up == edge.down && e.down == edge.up && (exist = true);
-    })
+      !this.opts.directed &&
+        e.up == edge.down &&
+        e.down == edge.up &&
+        (exist = true);
+    });
     return exist;
   }
   findEdge(edge: Edge): number {
@@ -149,7 +161,7 @@ export default class Graph {
   addEdges(edges: Array<Edge>) {
     edges.map(edge => {
       this.addEdge(edge);
-    })
+    });
   }
   addEdgeToVertex(edge: Edge) {
     edge.up.add(edge);
@@ -186,20 +198,20 @@ export default class Graph {
     return this._edges;
   }
   /*
-  * Return the number of vertices
-  */
+   * Return the number of vertices
+   */
   get order(): Number {
     return this._vertices.length;
   }
   /*
-  * Indicate whether the graph is emtpy
-  */
+   * Indicate whether the graph is emtpy
+   */
   get empty(): Boolean {
     return this.order == 0;
   }
   /*
-  * Indicate whether the graph is trivial
-  */
+   * Indicate whether the graph is trivial
+   */
   get trivial(): Boolean {
     return this.order <= 1;
   }

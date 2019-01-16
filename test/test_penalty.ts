@@ -1,6 +1,8 @@
-import { expect } from 'chai';
-import Graph, { Vertex, Edge } from '../misc/graph';
-import { kosaraju } from '../algos/kosaraju';
+import { expect } from "chai";
+import Graph, { Vertex, Edge } from "../misc/graph";
+import { penaltyGraph } from "../misc/penaltyGraph";
+import { kosaraju } from "../algos/kosaraju";
+import { printVertexNeighbours } from "../misc/graphUtil";
 
 describe("Penalty", () => {
   let vertices: Array<Vertex> = [];
@@ -34,10 +36,17 @@ describe("Penalty", () => {
   edges.push(new Edge(vertices[7], vertices[14]));
 
   const g: Graph = new Graph(vertices, edges, { directed: true });
+  const W: Array<Vertex> = vertices.slice(0, 8);
+  const nLevel: Array<Vertex> = vertices.slice(8, 16);
 
-  it("#SCC - kosaraju", () => {
-    expect(vertices.length).to.equal(5);
-    expect(edges.length).to.equal(5);
-    const tree: any = kosaraju(g);
-  })
-})
+  it("#SCC - penalty", () => {
+    expect(vertices.length).to.equal(16);
+    expect(edges.length).to.equal(19);
+    const dig: Graph = penaltyGraph(W, nLevel);
+    const sccs: any = kosaraju(dig);
+    sccs.map(scc => {
+      console.log("======================");
+      scc.map(v => console.log(v.id + 1));
+    });
+  });
+});
