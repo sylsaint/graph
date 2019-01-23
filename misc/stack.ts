@@ -1,5 +1,5 @@
 export default class Stack {
-  private count: number = 0; j
+  private count: number = 0;
   private storage: object = {};
   constructor() {
 

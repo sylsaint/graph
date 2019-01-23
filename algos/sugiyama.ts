@@ -20,13 +20,13 @@ import { kosaraju } from "./kosaraju";
 import { penaltyGraph } from "../misc/penaltyGraph";
 
 class Sugiyama {
-  constructor() {}
+  constructor() { }
   private shallow(graph: Graph): Graph {
     const ng = new Graph();
   }
-  private transform(graph: Graph): Graph {}
-  private eliminateCross(graph: Graph): Graph {}
-  private positionX(graph: Graph): Graph {}
-  private removeDummy(graph: Graph): Graph {}
-  public layout(graph: Graph): Graph {}
+  private transform(graph: Graph): Graph { }
+  private eliminateCross(graph: Graph): Graph { }
+  private positionX(graph: Graph): Graph { }
+  private removeDummy(graph: Graph): Graph { }
+  public layout(graph: Graph): Graph { }
 }

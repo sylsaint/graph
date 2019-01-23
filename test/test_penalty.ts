@@ -3,6 +3,7 @@ import Graph, { Vertex, Edge } from "../misc/graph";
 import { penaltyGraph } from "../misc/penaltyGraph";
 import { kosaraju } from "../algos/kosaraju";
 import { printVertexNeighbours } from "../misc/graphUtil";
+import { pm } from '../algos/penaltyMethod';
 
 describe("Penalty", () => {
   let vertices: Array<Vertex> = [];
@@ -48,5 +49,10 @@ describe("Penalty", () => {
       console.log("======================");
       scc.map(v => console.log(v.id + 1));
     });
+  });
+  it("#SCC - cycles", () => {
+    const dig: Graph = penaltyGraph(W, nLevel);
+    const sccs: any = kosaraju(dig);
+    pm(sccs);
   });
 });

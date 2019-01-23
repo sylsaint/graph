@@ -9,7 +9,7 @@ import { dfs } from "./traversal";
  * DFS may produce a tree or a forest when there are more than one SCCs depending upon the
  * chosen starting point.
  */
-export function kosaraju(g: Graph) {
+export function kosaraju(g: Graph): Array<any> {
   let visited: Array<Vertex> = [];
   let hasVisited = (vertex: Vertex): boolean => visited.indexOf(vertex) > -1;
   const traversed: any = dfs(g);
