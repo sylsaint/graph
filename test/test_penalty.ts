@@ -53,6 +53,6 @@ describe("Penalty", () => {
   it("#SCC - cycles", () => {
     const dig: Graph = penaltyGraph(W, nLevel);
     const sccs: any = kosaraju(dig);
-    pm(sccs);
+    pm(sccs, dig);
   });
 });

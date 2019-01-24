@@ -26,6 +26,6 @@ export function printVertexNeighbours(g: Graph) {
       if (edge.up == v) downs.push(edge.down.id + 1);
       if (edge.down == v) ups.push(edge.up.id + 1);
     });
-    console.log(ups.join(","), "->", v.id + 1, "->", downs.join(","));
+    console.log(ups.join(","), "<-", v.id + 1, "<-", downs.join(","));
   });
 }

@@ -58,7 +58,7 @@ export function penaltyGraph(W: Array<Vertex>, nLevel: Array<Vertex>): Graph {
     } else if (penlty < 0) {
       pg.addEdge(
         new Edge(findVertexById(pg, vec[1].id), findVertexById(pg, vec[0].id), {
-          penalty: penlty
+          penalty: 0 - penlty
         })
       );
     }
