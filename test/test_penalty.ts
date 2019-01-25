@@ -3,7 +3,7 @@ import Graph, { Vertex, Edge } from "../misc/graph";
 import { penaltyGraph, crossCount } from "../misc/penaltyGraph";
 import { kosaraju } from "../algos/kosaraju";
 import { findVertexById } from "../misc/graphUtil";
-import { pm } from '../algos/penaltyMethod';
+import { pm } from '../algos/penalty';
 
 describe("Penalty", () => {
   let vertices: Array<Vertex> = [];
