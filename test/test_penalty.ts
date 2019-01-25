@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import Graph, { Vertex, Edge } from "../misc/graph";
-import { penaltyGraph } from "../misc/penaltyGraph";
+import { penaltyGraph, crossCount } from "../misc/penaltyGraph";
 import { kosaraju } from "../algos/kosaraju";
-import { printVertexNeighbours } from "../misc/graphUtil";
+import { findVertexById } from "../misc/graphUtil";
 import { pm } from '../algos/penaltyMethod';
 
 describe("Penalty", () => {
@@ -43,16 +43,18 @@ describe("Penalty", () => {
   it("#SCC - penalty", () => {
     expect(vertices.length).to.equal(16);
     expect(edges.length).to.equal(19);
-    const dig: Graph = penaltyGraph(W, nLevel);
-    const sccs: any = kosaraju(dig);
-    sccs.map(scc => {
-      console.log("======================");
-      scc.map(v => console.log(v.id + 1));
-    });
   });
   it("#SCC - cycles", () => {
     const dig: Graph = penaltyGraph(W, nLevel);
     const sccs: any = kosaraju(dig);
-    pm(sccs, dig);
+    const sigmas: Array<Array<Vertex>> = pm(sccs, dig);
+    console.log("== print all the reorder cross count ==");
+    console.log('original cross: ', crossCount(W, nLevel));
+    sigmas.map(sigma => {
+      console.log(sigma.map(v => v.id + 1).join(','))
+      const reorder: Array<Vertex> = sigma.map(v => findVertexById(g, v.id));
+      const totalCross: number = crossCount(reorder, nLevel);
+      console.log('cross count: ', totalCross);
+    })
   });
 });

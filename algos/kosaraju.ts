@@ -26,9 +26,14 @@ export function kosaraju(g: Graph): Array<any> {
             return v;
           }
         })
-        .filter(v => !!v);
+        .filter(v => !!v)
+        .sort((a, b) => {
+          return a.id < b.id ? -1 : 1;
+        });
       sccs.push(scc);
     });
   });
+  // restore the penalty graph
+  transpose(g);
   return sccs;
 }

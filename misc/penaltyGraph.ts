@@ -65,3 +65,13 @@ export function penaltyGraph(W: Array<Vertex>, nLevel: Array<Vertex>): Graph {
   });
   return pg;
 }
+
+export function crossCount(W: Array<Vertex>, nLevel: Array<Vertex>): number {
+  let totalCross: number = 0;
+  let combineList: Array<Array<Vertex>> = combinatorN2(W);
+  combineList.map(vec => {
+    const xCnt: number = cross(vec[0], vec[1], nLevel);
+    totalCross += xCnt;
+  });
+  return totalCross;
+}

@@ -18,7 +18,22 @@ export function findVertexById(g: Graph, vid: number): Vertex {
   return found;
 }
 
+export function cloneGraph(g: Graph): Graph {
+  let replica: Graph = new Graph([], [], { directed: true });
+  // clone W to Graph pg
+  g.vertices.map(v => {
+    replica.addVertex(new Vertex(v.id));
+  });
+  g.edges.map(edge => {
+    replica.addEdge(
+      new Edge(findVertexById(replica, edge.up.id), findVertexById(replica, edge.down.id))
+    );
+  })
+  return replica;
+}
+
 export function printVertexNeighbours(g: Graph) {
+  console.log("== print incident edges of vertex ==");
   g.vertices.map(v => {
     let ups: Array<number> = [];
     let downs: Array<number> = [];
@@ -26,6 +41,6 @@ export function printVertexNeighbours(g: Graph) {
       if (edge.up == v) downs.push(edge.down.id + 1);
       if (edge.down == v) ups.push(edge.up.id + 1);
     });
-    console.log(ups.join(","), "<-", v.id + 1, "<-", downs.join(","));
+    console.log(ups.join(","), "->", v.id + 1, "->", downs.join(","));
   });
 }

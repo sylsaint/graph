@@ -2,18 +2,41 @@ import Graph, { Vertex, Edge } from "../misc/graph";
 import { kosaraju } from "./kosaraju";
 import { penaltyGraph } from "../misc/penaltyGraph";
 import { kahn } from './topological';
-import { printVertexNeighbours } from "../misc/graphUtil";
+import { cloneGraph } from "../misc/graphUtil";
 
-export function pm(sccs: Array<Array<Vertex>>, g: Graph) {
+export function pm(sccs: Array<Array<Vertex>>, g: Graph): Array<Array<Vertex>> {
+  let sigmas: Array<Array<Vertex>> = [];
+  let reduced: Array<any> = [];
   sccs.map(scc => {
     if (scc.length > 1) {
       const cycles: Array<Array<Edge>> = findCycle(edgeMatrix(scc));
-      console.log(cycles);
-      const reduced: Array<any> = reduceSummands(cycles);
-      console.log(reduced);
-      sortVertices(g, reduced);
+      console.log('== print all cycles ==');
+      cycles.map(cy => {
+        console.log(cy.map(edge => { return (edge.up.id + 1) + '->' + (edge.down.id + 1) }).join(' , '));
+      })
+      reduced = reduced.concat(reduceSummands(cycles));
     }
   })
+
+  console.log('== print all mini arc set ==');
+  reduced.map(rd => {
+    if (rd instanceof Edge) console.log((rd.up.id + 1) + '->' + (rd.down.id + 1));
+    if (rd instanceof Prod) console.log(rd.edges.map(edge => { return (edge.up.id + 1) + '->' + (edge.down.id + 1) }).join(' | '));
+  })
+  // reorder all the mini arc set to make edges come first
+  reduced = reduced.sort((a, b) => {
+    if (a instanceof Edge) {
+      return -1;
+    }
+    if (a instanceof Prod && b instanceof Edge) {
+      return 1;
+    }
+    if (a instanceof Prod && b instanceof Prod) {
+      return a.count < b.count ? -1 : a.count == b.count ? 0 : 1;
+    }
+  });
+  sigmas = sigmas.concat(sortVertices(g, reduced));
+  return sigmas;
 }
 
 // n x n matrix
@@ -26,11 +49,18 @@ function edgeMatrix(scc: Array<Vertex>): Array<Array<any>> {
       v.edges.map(edge => {
         if (edge.up == v && edge.down == vd && edge.up != edge.down) {
           found = true;
-          em[i].push(edge);
+          em[i][vi] = edge;
         }
       })
-      if (!found) em[i].push(0);
+      if (!found) em[i][vi] = 0;
     })
+  })
+  console.log('== print edge matrix ==');
+  em.map(item => {
+    console.log(item.map((i => {
+      if (i) return i.options.penalty;
+      return i;
+    })).join(','))
   })
   return em;
 }
@@ -191,27 +221,54 @@ function isEqual(x: Prod, y: Prod): boolean {
   return equal;
 }
 
-function sortVertices(G: Graph, arcs: Array<any>) {
+function sortVertices(G: Graph, arcs: Array<any>): Array<Array<Vertex>> {
+  let reordered: Array<Array<Vertex>> = [];
   let fst: any = arcs[0];
   if (fst instanceof Edge) {
     const g: Graph = reverseGraph(G, [fst as Edge])
-    const sorted: Array<Vertex> = kahn(g);
-    console.log(sorted);
+    const sorted: Array<Vertex> = kahn(cloneGraph(g));
+    reordered.push(sorted);
+    console.log('== print vertices orderings ==');
+    console.log(sorted.map(v => v.id + 1).join(' , '));
+    reverseGraph(G, [fst as Edge])
+    arcs.map((arc, idx) => {
+      if (idx != 0 && arc instanceof Edge) {
+        const g: Graph = reverseGraph(G, [arc as Edge])
+        const sorted: Array<Vertex> = kahn(cloneGraph(g));
+        reordered.push(sorted);
+        console.log('== print vertices orderings ==');
+        console.log(sorted.map(v => v.id + 1).join(' , '));
+        reverseGraph(G, [arc as Edge])
+      }
+    })
+  } else if (fst instanceof Prod) {
+    const g: Graph = reverseGraph(G, fst.edges)
+    const sorted: Array<Vertex> = kahn(cloneGraph(g));
+    reordered.push(sorted);
+    console.log('== print vertices orderings ==');
+    console.log(sorted.map(v => v.id + 1).join(' , '));
+    reverseGraph(G, fst.edges)
+    arcs.map((arc, idx) => {
+      if (idx != 0 && arc instanceof Prod && arc.count == fst.count) {
+        const g: Graph = reverseGraph(G, arc.edges)
+        const sorted: Array<Vertex> = kahn(cloneGraph(g));
+        reordered.push(sorted);
+        console.log('== print vertices orderings ==');
+        console.log(sorted.map(v => v.id + 1).join(' , '));
+        reverseGraph(G, arc.edges)
+      }
+    })
   }
+  return reordered;
 }
 
 function reverseGraph(g: Graph, edges: Array<Edge>): Graph {
   edges.map(edge => {
-    console.log(edge);
-    edge.up.edges.map(edge => {
-      console.log(edge);
-    })
     if (g.hasEdge(edge)) {
       const tmp: Vertex = edge.up;
       edge.up = edge.down;
       edge.down = tmp;
     }
-    console.log(edge);
   })
   return g;
 }
