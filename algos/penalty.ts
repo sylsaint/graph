@@ -1,6 +1,4 @@
 import Graph, { Vertex, Edge } from "../misc/graph";
-import { kosaraju } from "./kosaraju";
-import { penaltyGraph } from "../misc/penaltyGraph";
 import { kahn } from './topological';
 import { cloneGraph } from "../misc/graphUtil";
 
