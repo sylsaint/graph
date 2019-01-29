@@ -12,6 +12,16 @@ interface OrderWrapper {
   idx: number
 }
 
+interface RowCol {
+  rows: Array<number>,
+  cols: Array<number>
+}
+
+interface BcRet {
+  row: Array<Vertex>,
+  col: Array<Vertex>
+}
+
 export function bc(ups: Array<Vertex>, downs: Array<Vertex>) {
   phase1(ups, downs);
 }
@@ -35,7 +45,8 @@ function barycenter(W: Array<Vertex>, nLevel: Array<Vertex>) {
   return { rows, cols };
 }
 
-function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, totalCnt: number = 12) {
+function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, totalCnt: number = 12): BcRet {
+  console.log('iteration count:', iterCnt);
   const { rows } = barycenter(row, col);
   let M0: Array<Array<number>> = edgeMatrix(row, col);
   let MS: Array<Array<number>> = M0;
@@ -72,14 +83,65 @@ function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, tot
     console.log(KS);
   }
   if (matrixEqual(M0, M2) || iterCnt >= totalCnt) {
-    return phase2(newRow, newCol);
+    return phase2(newRow, newCol, iterCnt + 1, totalCnt);
   } else {
     return phase1(newRow, newCol, iterCnt + 1, totalCnt);
   }
 }
 
-function phase2(row: Array<Vertex>, col: Array<Vertex>) {
+function phase2(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number, totalCnt: number): BcRet {
+  const { rows } = barycenter(row, col);
+  const nrows: Array<OrderWrapper> = rows.map((r, i) => {
+    return { value: r, idx: i };
+  });
+  const sortedRows: Array<OrderWrapper> = nrows.sort((a, b) => {
+    return a.value == b.value ? 1 : a.value < b.value ? -1 : 1;
+  })
+  const newRow: Array<Vertex> = sortedRows.map(order => {
+    return row[order.idx];
+  })
 
+  const { cols } = barycenter(newRow, col);
+  let increasing: boolean = true;
+  cols.sort((a, b) => {
+    if (a > b) increasing = false;
+    return -1;
+  });
+  if (increasing) {
+    const ncols: Array<OrderWrapper> = cols.map((r, i) => {
+      return { value: r, idx: i };
+    });
+    const sortedCols: Array<OrderWrapper> = ncols.sort((a, b) => {
+      return a.value <= b.value ? -1 : 1;
+    })
+    const newCol: Array<Vertex> = sortedCols.map(order => {
+      return col[order.idx];
+    })
+    const rw: RowCol = barycenter(newRow, newCol);
+    increasing = true;
+    rw.cols.sort((a, b) => {
+      if (a > b) increasing = false;
+      return -1;
+    })
+    if (increasing) {
+      // terminate
+      return { row: newRow, col: newCol }
+    } else {
+      if (iterCnt >= totalCnt) {
+        // terminate
+        return { row, col }
+      } else {
+        return phase1(newRow, newCol, iterCnt + 1, totalCnt);
+      }
+    }
+  } else {
+    if (iterCnt >= totalCnt) {
+      // terminate
+      return { row, col }
+    } else {
+      return phase1(newRow, col, iterCnt + 1, totalCnt);
+    }
+  }
 }
 
 function matrixEqual(m1: Array<Array<number>>, m2: Array<Array<number>>): boolean {
