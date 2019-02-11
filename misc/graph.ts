@@ -9,11 +9,11 @@
  */
 export class Vertex {
   private _id: number;
-  private opts: object;
+  private _options: object = { up: 1, down: 1 };
   private adjacents: Array<Edge>;
   constructor(id: number, opts?: object) {
     this._id = id;
-    this.opts = opts || {};
+    this._options = { ...this._options, ...opts };
     this.adjacents = [];
   }
   /*
@@ -47,6 +47,12 @@ export class Vertex {
   }
   get id(): number {
     return this._id;
+  }
+  getOptions(name: string) {
+    return this._options[name];
+  }
+  setOptions(name: string, value: any) {
+    this._options[name] = value;
   }
 }
 
@@ -86,6 +92,9 @@ export class Edge {
   }
   get options(): object {
     return this._options;
+  }
+  setOptions(name: string, value: any) {
+    this._options[name] = value;
   }
 }
 
