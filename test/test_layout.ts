@@ -4,7 +4,7 @@ import { crossCount } from "../misc/penaltyGraph";
 import { penaltyMethod } from '../algos/penaltymethod';
 import { position } from '../algos/prioritylayout';
 
-describe("N-Level", () => {
+describe("Position layout", () => {
   let vertices: Array<Vertex> = [];
   let alpha: Array<string> = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'];
   for (let i: number = 0; i < 12; i++) {
@@ -31,23 +31,8 @@ describe("N-Level", () => {
     nLevels.push([vertices[i], vertices[i + 1], vertices[i + 2]]);
   }
 
-  it("#origin cross count", () => {
-    let totalCount: number = 0;
-    for (let i: number = 0; i < nLevels.length - 1; i++) {
-      totalCount += crossCount(nLevels[i], nLevels[i + 1]);
-    }
-    expect(vertices.length).to.equal(12);
-    expect(edges.length).to.equal(11);
-    expect(totalCount).to.equal(5);
-  });
-  it("#reduced cross count", () => {
-    const rt: Array<Array<Vertex>> = penaltyMethod(g, nLevels);
-    let totalCount: number = 0;
-    for (let i: number = 0; i < rt.length - 1; i++) {
-      console.log(rt[i].map(v => alpha[v.id]).join(','));
-      totalCount += crossCount(rt[i], rt[i + 1]);
-    }
-    console.log(rt[rt.length - 1].map(v => alpha[v.id]).join(','));
-    console.log(totalCount);
-  });
+  it("#layout", () => {
+    penaltyMethod(g, nLevels);
+    position(g, nLevels);
+  })
 });
