@@ -1,9 +1,11 @@
 import Graph, { Vertex, Edge } from '../misc/graph';
+import { cloneGraph } from '../misc/graphUtil';
 
 export function makeHierarchy(g: Graph) {
   let roots: Array<Vertex> = [];
   // find all the roots without incoming edges
-  g.vertices.map(v => {
+  let cloned: Graph = cloneGraph(g);
+  cloned.vertices.map(v => {
     let isRoot: boolean = true;
     let outDegree: number = 0;
     let inDegree: number = 0;
@@ -25,11 +27,11 @@ export function makeHierarchy(g: Graph) {
   if (!roots.length) {
     // find the maximum ratio
     let max: number = 0;
-    g.vertices.map(v => {
+    cloned.vertices.map(v => {
       let ratio: number = v.getOptions('outInRatio');
       if (ratio > max) max = ratio;
     })
-    g.vertices.map(v => {
+    cloned.vertices.map(v => {
       if (v.getOptions('outInRatio') == max) roots.push(v);
     })
   }
@@ -65,7 +67,17 @@ export function makeHierarchy(g: Graph) {
         roots.push(down);
       }
     })
-    exclude.map(edge => g.removeEdge(edge));
+    exclude.map(edge => cloned.removeEdge(edge));
   }
-  return visited;
+  let levels: Array<Array<Vertex>> = adjustLevel(g, visited);
+  addDummy(levels);
+  return levels;
+}
+
+function adjustLevel(g: Graph, vertices: Array<Vertex>): Array<Array<Vertex>> {
+  return [];
+}
+
+function addDummy(levels: Array<Array<Vertex>>): Array<Array<Vertex>> {
+  return [];
 }
