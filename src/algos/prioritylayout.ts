@@ -26,8 +26,6 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
       if (v.getOptions('down') > downMax) downMax = v.getOptions('down');
     });
   });
-  console.log('upMax', upMax);
-  console.log('downMax', downMax);
   levels.map(lvl => {
     lvl.map(v => {
       if (v.getOptions('type') == 'dummy') {
@@ -45,7 +43,6 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
     let posMap: object = {};
     downs.map(v => {
       const bary: number = BikU(ups, v);
-      console.log('biku ', v.id, ' : ', bary);
       // if bary is NaN, position to original place
       if (isNaN(bary)) {
         if (!posMap[v.getOptions('x')]) {

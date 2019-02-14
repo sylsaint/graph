@@ -143,10 +143,5 @@ function addDummy(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> 
       });
     });
   });
-  console.log('***** dummy *****');
-  levels.map(lvl => {
-    console.log(lvl.map(v => v.id).join(' , '));
-  });
-  printVertexNeighbours(g);
   return levels;
 }
