@@ -142,6 +142,10 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
       }
     });
   }
+  g.vertices.map(v => {
+    v.setOptions('x', left + (v.getOptions('x') - 1) * (width + gutter));
+    v.setOptions('y', top + (v.getOptions('level') - 1) * (height + gutter));
+  })
   return g;
 }
 

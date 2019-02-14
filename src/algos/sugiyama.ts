@@ -21,9 +21,10 @@ import { makeHierarchy } from './hierarchy';
 import { cloneGraph } from '../misc/graphUtil';
 import { penaltyMethod } from './penaltymethod';
 import { position } from './prioritylayout';
+import { LayoutOptions } from '../misc/interface';
 
 export class Sugiyama {
-  constructor() {}
+  constructor() { }
   private clone(g: Graph): Graph {
     return cloneGraph(g);
   }
@@ -36,16 +37,16 @@ export class Sugiyama {
   private cross(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> {
     return penaltyMethod(g, levels);
   }
-  private position(g: Graph, levels: Array<Array<Vertex>>): Graph {
-    return position(g, levels);
+  private position(g: Graph, levels: Array<Array<Vertex>>, options?: LayoutOptions): Graph {
+    return position(g, levels, options);
   }
-  public layout(g: Graph): Array<Graph> {
+  public layout(g: Graph, options?: LayoutOptions): Array<Graph> {
     let finals: Array<Graph> = [];
     let graphs: Array<Graph> = this.divide(g);
     graphs.map(gi => {
       let levels: Array<Array<Vertex>> = this.hierarchy(gi);
       levels = this.cross(gi, levels);
-      let ordered: Graph = this.position(gi, levels);
+      let ordered: Graph = this.position(gi, levels, options);
       finals.push(ordered);
     });
     return finals;
