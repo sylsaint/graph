@@ -2,12 +2,24 @@
   "name": "graph",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "nyc mocha --require ts-node/register test/**/*.ts"
+    "test": "nyc mocha --require ts-node/register src/test/**/*.ts",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "nyc": {
     "extension": [
@@ -16,11 +28,12 @@
     ],
     "exclude": [
       "**/*.d.ts",
-      "coverage/"
+      "coverage/",
+      "lib/"
     ],
     "all": true
   },
-  "author": "",
+  "author": "yonglu.syl",
   "license": "ISC",
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -33,5 +46,9 @@
   },
   "dependencies": {
     "lodash": "^4.17.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sylsaint/graph.git"
   }
 }
