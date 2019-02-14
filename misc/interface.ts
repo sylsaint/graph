@@ -11,3 +11,7 @@ export interface Padding {
   top: number;
   bottom: number;
 }
+
+export interface HashMap {
+  [key: string]: any;
+}

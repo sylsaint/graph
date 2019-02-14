@@ -46,12 +46,10 @@ function barycenter(W: Array<Vertex>, nLevel: Array<Vertex>) {
 }
 
 function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, totalCnt: number = 12): BcRet {
-  console.log('iteration count:', iterCnt);
   const { rows } = barycenter(row, col);
   let M0: Array<Array<number>> = edgeMatrix(row, col);
   let MS: Array<Array<number>> = M0;
   let KS: number = crossCount(row, col);
-  console.log(KS);
   const nrows: Array<OrderWrapper> = rows.map((r, i) => {
     return { value: r, idx: i };
   });
@@ -64,7 +62,6 @@ function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, tot
   let M1 = edgeMatrix(newRow, col);
   MS = M1;
   KS = crossCount(newRow, col);
-  console.log(KS);
   const { cols } = barycenter(newRow, col);
   const ncols: Array<OrderWrapper> = cols.map((r, i) => {
     return { value: r, idx: i };
@@ -80,7 +77,6 @@ function phase1(row: Array<Vertex>, col: Array<Vertex>, iterCnt: number = 0, tot
   if (KSS < KS) {
     KS = KSS;
     MS = M2;
-    console.log(KS);
   }
   if (matrixEqual(M0, M2) || iterCnt >= totalCnt) {
     return phase2(newRow, newCol, iterCnt + 1, totalCnt);

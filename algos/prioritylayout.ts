@@ -8,11 +8,13 @@ const defaultOptions: LayoutOptions = {
   gutter: 0
 }
 
-export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions) {
+export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
   // initial horizontal position
   options = { ...defaultOptions, ...options };
   const { left, right, top, bottom } = options.padding;
   const { width, height, gutter } = options;
+  let upMax: number = 0;
+  let downMax: number = 0;
   levels.map((lvl, li) => {
     lvl.map((v, vi) => {
       v.setOptions('x', vi + 1);
@@ -20,6 +22,19 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
       // v.setOptions('x', left + vi * (width + gutter));
       // v.setOptions('y', top + li * height);
       connectivity(v);
+      if (v.getOptions('up') > upMax) upMax = v.getOptions('up');
+      if (v.getOptions('down') > downMax) downMax = v.getOptions('down');
+    })
+  })
+  console.log('upMax', upMax);
+  console.log('downMax', downMax);
+  levels.map(lvl => {
+    lvl.map(v => {
+      if (v.getOptions('type') == 'dummy') {
+        // 2 is a empirical number
+        v.setOptions('upPriority', upMax * 2);
+        v.setOptions('downPriority', downMax * 2);
+      }
     })
   })
   // improve horizontal positions
@@ -30,6 +45,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
     let posMap: object = {};
     downs.map(v => {
       const bary: number = BikU(ups, v);
+      console.log('biku ', v.id, ' : ', bary);
       // if bary is NaN, position to original place
       if (isNaN(bary)) {
         if (!posMap[v.getOptions('x')]) {
@@ -40,7 +56,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
           posMap[v.getOptions('x')] = v;
         }
       } else {
-        const newPos: number = parseInt(bary.toString());
+        const newPos: number = parseInt(Math.ceil(bary).toString());
         let pointer: number = newPos + 1;
         let dis: number = newPos;
         if (!posMap[newPos]) {
@@ -50,7 +66,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
           let canDisplace: boolean = false;
           while (pointer--) {
             if (posMap[pointer]) {
-              if (posMap[pointer].getOptions('up') >= v.getOptions('up')) {
+              if (posMap[pointer].getOptions('upPriority') >= v.getOptions('upPriority')) {
                 canDisplace = false;
                 break;
               }
@@ -93,7 +109,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
           posMap[v.getOptions('x')] = v;
         }
       } else {
-        const newPos: number = parseInt(bary.toString());
+        const newPos: number = parseInt(Math.ceil(bary).toString());
         let pointer: number = newPos + 1;
         let dis: number = newPos;
         if (!posMap[newPos]) {
@@ -103,7 +119,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
           let canDisplace: boolean = false;
           while (pointer--) {
             if (posMap[pointer]) {
-              if (posMap[pointer].getOptions('down') >= v.getOptions('down')) {
+              if (posMap[pointer].getOptions('downPriority') >= v.getOptions('downPriority')) {
                 canDisplace = false;
                 break;
               }
@@ -129,12 +145,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
       }
     })
   }
-  // print
-  levels.map(level => {
-    level.map(v => {
-      console.log(`v.id: ${v.id} -- v.x: ${v.getOptions('x')}`);
-    })
-  })
+  return g;
 }
 
 function connectivity(v: Vertex): Vertex {
@@ -146,6 +157,8 @@ function connectivity(v: Vertex): Vertex {
   })
   v.setOptions('up', upConn);
   v.setOptions('down', downConn);
+  v.setOptions('upPriority', upConn);
+  v.setOptions('downPriority', downConn);
   return v;
 }
 

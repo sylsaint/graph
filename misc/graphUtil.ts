@@ -1,5 +1,7 @@
 import Graph, { Vertex, Edge } from "./graph";
 
+let BASE_DUMMY_ID = 100000;
+
 // in-place transpose edge direction
 export function transpose(g: Graph): Graph {
   g.edges.map(edge => {
@@ -43,4 +45,10 @@ export function printVertexNeighbours(g: Graph) {
     });
     console.log(ups.join(","), "->", v.id + 1, "->", downs.join(","));
   });
+}
+
+
+export function getDummyId() {
+  BASE_DUMMY_ID += 1;
+  return BASE_DUMMY_ID;
 }

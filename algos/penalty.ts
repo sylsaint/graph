@@ -8,19 +8,10 @@ export function pm(sccs: Array<Array<Vertex>>, g: Graph): Array<Array<Vertex>> {
   sccs.map(scc => {
     if (scc.length > 1) {
       const cycles: Array<Array<Edge>> = findCycle(edgeMatrix(scc));
-      console.log('== print all cycles ==');
-      cycles.map(cy => {
-        console.log(cy.map(edge => { return (edge.up.id + 1) + '->' + (edge.down.id + 1) }).join(' , '));
-      })
       reduced = reduced.concat(reduceSummands(cycles));
     }
   })
 
-  console.log('== print all mini arc set ==');
-  reduced.map(rd => {
-    if (rd instanceof Edge) console.log((rd.up.id + 1) + '->' + (rd.down.id + 1));
-    if (rd instanceof Prod) console.log(rd.edges.map(edge => { return (edge.up.id + 1) + '->' + (edge.down.id + 1) }).join(' | '));
-  })
   // reorder all the mini arc set to make edges come first
   reduced = reduced.sort((a, b) => {
     if (a instanceof Edge) {
@@ -52,13 +43,6 @@ function edgeMatrix(scc: Array<Vertex>): Array<Array<any>> {
       })
       if (!found) em[i][vi] = 0;
     })
-  })
-  console.log('== print edge matrix ==');
-  em.map(item => {
-    console.log(item.map((i => {
-      if (i) return i.options.penalty;
-      return i;
-    })).join(','))
   })
   return em;
 }
@@ -226,16 +210,12 @@ function sortVertices(G: Graph, arcs: Array<any>): Array<Array<Vertex>> {
     const g: Graph = reverseGraph(G, [fst as Edge])
     const sorted: Array<Vertex> = kahn(cloneGraph(g));
     reordered.push(sorted);
-    console.log('== print vertices orderings ==');
-    console.log(sorted.map(v => v.id + 1).join(' , '));
     reverseGraph(G, [fst as Edge])
     arcs.map((arc, idx) => {
       if (idx != 0 && arc instanceof Edge) {
         const g: Graph = reverseGraph(G, [arc as Edge])
         const sorted: Array<Vertex> = kahn(cloneGraph(g));
         reordered.push(sorted);
-        console.log('== print vertices orderings ==');
-        console.log(sorted.map(v => v.id + 1).join(' , '));
         reverseGraph(G, [arc as Edge])
       }
     })
@@ -243,16 +223,12 @@ function sortVertices(G: Graph, arcs: Array<any>): Array<Array<Vertex>> {
     const g: Graph = reverseGraph(G, fst.edges)
     const sorted: Array<Vertex> = kahn(cloneGraph(g));
     reordered.push(sorted);
-    console.log('== print vertices orderings ==');
-    console.log(sorted.map(v => v.id + 1).join(' , '));
     reverseGraph(G, fst.edges)
     arcs.map((arc, idx) => {
       if (idx != 0 && arc instanceof Prod && arc.count == fst.count) {
         const g: Graph = reverseGraph(G, arc.edges)
         const sorted: Array<Vertex> = kahn(cloneGraph(g));
         reordered.push(sorted);
-        console.log('== print vertices orderings ==');
-        console.log(sorted.map(v => v.id + 1).join(' , '));
         reverseGraph(G, arc.edges)
       }
     })
