@@ -111,7 +111,7 @@ export default class Graph {
     vertices && (this._vertices = vertices);
     edges && this.addEdges(edges);
     edges && (this._edges = edges);
-    opts && (this.opts = { ...this.opts, opts });
+    opts && (this.opts = { ...this.opts, ...opts });
   }
   findVertex(v: Vertex): number {
     return this._vertices.indexOf(v);
