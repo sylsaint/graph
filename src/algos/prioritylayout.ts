@@ -91,7 +91,7 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
   const vertices: Array<Vertex> = reverse ? ups : downs;
   const priorityKey: string = reverse ? 'downPriority' : 'upPriority';
   vertices.map(v => {
-    const bary: number = reverse ? BikU(ups, v) : BikL(downs, v);
+    const bary: number = reverse ? BikL(downs, v) : BikU(ups, v);
     // if bary is NaN, do nothing 
     if (isNaN(bary)) {
       return;
