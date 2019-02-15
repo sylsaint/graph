@@ -121,7 +121,7 @@ function adjustLevel(g: Graph, vertices: Array<Vertex>): Array<Array<Vertex>> {
 
 function addDummy(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> {
   levels.map(level => {
-    level.map(v => {
+    level.map((v, idx) => {
       const currentLevel: number = v.getOptions('level');
       v.edges.map(edge => {
         if (edge.up == v) {
@@ -134,7 +134,11 @@ function addDummy(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> 
               g.addVertex(dummpyVertex);
               g.addEdge(new Edge(up, dummpyVertex));
               up = dummpyVertex;
-              levels[lvl - 1].push(dummpyVertex);
+              if (idx >= levels[lvl - 1].length) {
+                levels[lvl - 1].push(dummpyVertex);
+              } else {
+                levels[lvl - 1].splice(idx, 0, dummpyVertex);
+              }
             }
             g.addEdge(new Edge(up, down));
             g.removeEdge(edge);
