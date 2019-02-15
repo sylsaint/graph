@@ -6,7 +6,7 @@ import { penaltyGraph } from '../misc/penaltyGraph';
 import { cloneGraph } from '../misc/graphUtil';
 
 export function penaltyMethod(g: Graph, levels: Array<Array<Vertex>>, iterCount: number = 5): Array<Array<Vertex>> {
-  if (levels.length <= 1) return [];
+  if (levels.length <= 1) return levels;
   // iteration termination condition:
   // 1. the same matrix realization appears periodically
   // 2. reaching the iteration limit

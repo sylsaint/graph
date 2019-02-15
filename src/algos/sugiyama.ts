@@ -22,6 +22,7 @@ import { cloneGraph } from '../misc/graphUtil';
 import { penaltyMethod } from './penaltymethod';
 import { position } from './prioritylayout';
 import { LayoutOptions } from '../misc/interface';
+import { defaultOptions } from '../misc/constant';
 
 export class Sugiyama {
   constructor() { }
@@ -43,10 +44,16 @@ export class Sugiyama {
   public layout(g: Graph, options?: LayoutOptions): Array<Graph> {
     let finals: Array<Graph> = [];
     let graphs: Array<Graph> = this.divide(g);
+    let leftPadding: number = 0;
+    let merged: LayoutOptions = { ...defaultOptions, ...options };
+    const { width, gutter } = merged;
     graphs.map(gi => {
       let levels: Array<Array<Vertex>> = this.hierarchy(gi);
       levels = this.cross(gi, levels);
-      let ordered: Graph = this.position(gi, levels, options);
+      const maxWidth: number = Math.max.apply(null, levels.map(lvl => lvl.length));
+      let ordered: Graph = this.position(gi, levels, merged);
+      leftPadding += maxWidth * (width + gutter);
+      merged.padding = { ...merged.padding, ...{ left: leftPadding } };
       finals.push(ordered);
     });
     return finals;

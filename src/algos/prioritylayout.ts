@@ -1,12 +1,6 @@
 import Graph, { Vertex } from '../misc/graph';
 import { LayoutOptions } from '../misc/interface';
-
-const defaultOptions: LayoutOptions = {
-  padding: { left: 0, right: 0, top: 0, bottom: 0 },
-  width: 100,
-  height: 50,
-  gutter: 0,
-};
+import { defaultOptions } from '../misc/constant';
 
 export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
   // initial horizontal position

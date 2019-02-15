@@ -4,7 +4,7 @@ import { Sugiyama } from '../algos/sugiyama';
 
 describe('Sugiyama', () => {
   let vertices: Array<Vertex> = [];
-  for (let i: number = 0; i < 4; i++) {
+  for (let i: number = 0; i < 5; i++) {
     vertices.push(new Vertex(i));
   }
   let edges: Array<Edge> = [];
@@ -23,6 +23,6 @@ describe('Sugiyama', () => {
         g.vertices.map(v => `${v.id}: ${v.getOptions('level')}, ${v.getOptions('x')}, ${v.getOptions('y')}`).join('\n'),
       );
     });
-    expect(graphs.length).to.equal(1);
+    expect(graphs.length).to.equal(2);
   });
 });
