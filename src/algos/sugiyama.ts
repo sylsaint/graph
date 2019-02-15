@@ -52,7 +52,7 @@ export class Sugiyama {
       levels = this.cross(gi, levels);
       const maxWidth: number = Math.max.apply(null, levels.map(lvl => lvl.length));
       let ordered: Graph = this.position(gi, levels, merged);
-      leftPadding += maxWidth * (width + gutter);
+      leftPadding += maxWidth * (width + gutter) + width;
       merged.padding = { ...merged.padding, ...{ left: leftPadding } };
       finals.push(ordered);
     });
