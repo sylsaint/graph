@@ -38,6 +38,6 @@ describe('Position layout 2', () => {
         g.vertices.map(v => `${v.id}: ${v.getOptions('level')}, ${v.getOptions('x')}, ${v.getOptions('y')}`).join('\n'),
       );
     });
-    expect(graphs.length).to.equal(5);
+    expect(graphs.length).to.equal(6);
   })
 });
