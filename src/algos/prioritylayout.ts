@@ -1,5 +1,5 @@
 import Graph, { Vertex } from '../misc/graph';
-import { LayoutOptions } from '../misc/interface';
+import { LayoutOptions, VerticeMap } from '../misc/interface';
 import { defaultOptions } from '../misc/constant';
 
 export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
@@ -34,107 +34,13 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
   for (let i: number = 0; i < levels.length - 1; i++) {
     const ups: Array<Vertex> = levels[i];
     const downs: Array<Vertex> = levels[i + 1];
-    let posMap: object = {};
-    downs.map(v => {
-      const bary: number = BikU(ups, v);
-      // if bary is NaN, position to original place
-      if (isNaN(bary)) {
-        if (!posMap[v.getOptions('x')]) {
-          v.setOptions('x', v.getOptions('x'));
-          posMap[v.getOptions('x')] = v;
-        } else {
-          v.setOptions('x', v.getOptions('x') + 1);
-          posMap[v.getOptions('x')] = v;
-        }
-      } else {
-        const newPos: number = parseInt(Math.ceil(bary).toString());
-        let pointer: number = newPos + 1;
-        let dis: number = newPos;
-        if (!posMap[newPos]) {
-          v.setOptions('x', newPos);
-          posMap[newPos] = v;
-        } else {
-          let canDisplace: boolean = false;
-          while (pointer--) {
-            if (posMap[pointer]) {
-              if (posMap[pointer].getOptions('upPriority') >= v.getOptions('upPriority')) {
-                canDisplace = false;
-                break;
-              }
-            } else if (pointer > 0) {
-              canDisplace = true;
-              break;
-            }
-          }
-          if (canDisplace) {
-            while (dis > pointer) {
-              let origVertex: Vertex = posMap[dis] as Vertex;
-              origVertex.setOptions('x', origVertex.getOptions('x') - 1);
-              dis--;
-              posMap[dis] = origVertex;
-            }
-            v.setOptions('x', newPos);
-            posMap[newPos] = v;
-          } else {
-            v.setOptions('x', newPos + 1);
-            posMap[newPos + 1] = v;
-          }
-        }
-      }
-    });
+    doProcedure(ups, downs);
   }
   // up procedure
   for (let i: number = levels.length - 1; i > 0; i--) {
     const downs: Array<Vertex> = levels[i];
     const ups: Array<Vertex> = levels[i - 1];
-    let posMap: object = {};
-    ups.map(v => {
-      const bary: number = BikL(downs, v);
-      // if bary is NaN, position to original place
-      if (isNaN(bary)) {
-        if (!posMap[v.getOptions('x')]) {
-          v.setOptions('x', v.getOptions('x'));
-          posMap[v.getOptions('x')] = v;
-        } else {
-          v.setOptions('x', v.getOptions('x') + 1);
-          posMap[v.getOptions('x')] = v;
-        }
-      } else {
-        const newPos: number = parseInt(Math.ceil(bary).toString());
-        let pointer: number = newPos + 1;
-        let dis: number = newPos;
-        if (!posMap[newPos]) {
-          v.setOptions('x', newPos);
-          posMap[newPos] = v;
-        } else {
-          let canDisplace: boolean = false;
-          while (pointer--) {
-            if (posMap[pointer]) {
-              if (posMap[pointer].getOptions('downPriority') >= v.getOptions('downPriority')) {
-                canDisplace = false;
-                break;
-              }
-            } else if (pointer > 0) {
-              canDisplace = true;
-              break;
-            }
-          }
-          if (canDisplace) {
-            while (dis > pointer) {
-              let origVertex: Vertex = posMap[dis] as Vertex;
-              origVertex.setOptions('x', origVertex.getOptions('x') - 1);
-              dis--;
-              posMap[dis] = origVertex;
-            }
-            v.setOptions('x', newPos);
-            posMap[newPos] = v;
-          } else {
-            v.setOptions('x', newPos + 1);
-            posMap[newPos + 1] = v;
-          }
-        }
-      }
-    });
+    doProcedure(ups, downs, true);
   }
   g.vertices.map(v => {
     v.setOptions('x', left + (v.getOptions('x') - 1) * (width + gutter));
@@ -177,4 +83,59 @@ function BikL(downs: Array<Vertex>, v: Vertex): number {
     }
   });
   return barycenter / v.getOptions('down');
+}
+
+
+
+function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean = false) {
+  const vertices: Array<Vertex> = reverse ? ups : downs;
+  const priorityKey: string = reverse ? 'downPriority' : 'upPriority';
+  vertices.map(v => {
+    const bary: number = reverse ? BikU(ups, v) : BikL(downs, v);
+    // if bary is NaN, do nothing 
+    if (isNaN(bary)) {
+      return;
+    }
+    const reorderPos: number = parseInt(Math.ceil(bary).toString());
+    v.setOptions('x', reorderPos);
+  });
+  const posList: Array<Vertex> = [];
+  let maxPos: number = 0;
+  console.log('****** procedure vertices *******');
+  vertices.map(v => {
+    const pos: number = v.getOptions('x');
+    console.log('max pos: ', maxPos, pos);
+    if (pos > maxPos) {
+      maxPos = pos;
+      posList[pos] = v;
+    } else {
+      let canChange: boolean = true;
+      let pointer: number = maxPos;
+      while (posList[pointer] && pointer >= 0) {
+        if (posList[pointer].getOptions(priorityKey) >= v.getOptions(priorityKey)) {
+          canChange = false;
+          break;
+        }
+        pointer--;
+      }
+      if (pointer < 0) {
+        canChange = false;
+      }
+      console.log('canChange: ', canChange);
+      if (canChange) {
+        for (let i: number = maxPos; i > pointer; i--) {
+          posList[i].setOptions('x', i - 1);
+          posList[i - 1] = posList[i];
+        }
+        v.setOptions('x', maxPos);
+        posList[maxPos] = v;
+      } else {
+        maxPos += 1;
+        v.setOptions('x', maxPos);
+        posList[maxPos] = v;
+      }
+    }
+
+  })
+  console.log(posList.map(v => v && v.id || -1));
 }

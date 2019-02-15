@@ -1,3 +1,5 @@
+import { Vertex } from "./graph";
+
 export interface LayoutOptions {
   padding: Padding;
   gutter: number;
@@ -14,4 +16,9 @@ export interface Padding {
 
 export interface HashMap {
   [key: string]: any;
+}
+
+export interface VerticeMap {
+  [key: number]: Array<Vertex>;
+  [key: string]: Array<Vertex>;
 }
