@@ -101,10 +101,8 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
   });
   const posList: Array<Vertex> = [];
   let maxPos: number = 0;
-  console.log('****** procedure vertices *******');
   vertices.map(v => {
     const pos: number = v.getOptions('x');
-    console.log('max pos: ', maxPos, pos);
     if (pos > maxPos) {
       maxPos = pos;
       posList[pos] = v;
@@ -121,7 +119,6 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
       if (pointer < 0) {
         canChange = false;
       }
-      console.log('canChange: ', canChange);
       if (canChange) {
         for (let i: number = maxPos; i > pointer; i--) {
           posList[i].setOptions('x', i - 1);
@@ -137,5 +134,4 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
     }
 
   })
-  console.log(posList.map(v => v && v.id || -1));
 }
