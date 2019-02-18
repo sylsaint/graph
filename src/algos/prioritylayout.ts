@@ -20,15 +20,40 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
       if (v.getOptions('down') > downMax) downMax = v.getOptions('down');
     });
   });
-  levels.map(lvl => {
+  levels.map((lvl, li) => {
     lvl.map(v => {
       if (v.getOptions('type') == 'dummy') {
         // 2 is a empirical number
-        v.setOptions('upPriority', upMax * 2);
-        v.setOptions('downPriority', downMax * 2);
+        v.setOptions('upPriority', upMax * 2 * (1+((li+1)/levels.length)));
+        v.setOptions('downPriority', downMax * 2 * (1+((li+1)/levels.length)));
+      }
+
+    });
+  });
+  levels.map(lvl => {
+    lvl.map(v => {
+      if (v.getOptions('type') != 'dummy') {
+          let upPrio: number = v.getOptions('upPriority');
+          let setUp: boolean = false;
+          let downPrio: number = v.getOptions('downPriority');
+          let setDown: boolean = false;
+          v.edges.map(edge => {
+              if(edge.up.getOptions('type') === 'dummy') {
+                setUp = true;
+                upPrio = upPrio - 1 + edge.up.getOptions('upPriority') * 0.5;
+              }
+              if(edge.down.getOptions('type') === 'dummy') {
+                setDown = true;
+                downPrio = downPrio - 1 + edge.down.getOptions('downPriority') * 0.5;
+              }
+          })
+          setUp && v.setOptions('upPriority', upPrio);
+          setDown && v.setOptions('downPriority', downPrio);
       }
     });
   });
+  // compact layout
+  compact(levels);
   // improve horizontal positions
   // down procedure
   for (let i: number = 0; i < levels.length - 1; i++) {
@@ -134,4 +159,12 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
     }
 
   })
+}
+
+function compact(levels: Array<Array<Vertex>>) {
+    const maxPos: number = Math.max.apply(null, levels.map(lvl => Math.max.apply(null, lvl.map(v => v.getOptions('x')))));
+    for(let ci: number = 1; ci <= maxPos; ci++) {
+        for(let ri: number = 0; ri < levels.length; ri++) {
+        }
+    }
 }

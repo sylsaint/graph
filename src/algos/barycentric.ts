@@ -154,7 +154,7 @@ function matrixEqual(m1: Array<Array<number>>, m2: Array<Array<number>>): boolea
   return equal;
 }
 
-export function nbarycenter(g: Graph, levels: Array<Array<Vertex>>, interCount: number = 5): Array<Array<Vertex>> {
+export function nbarycenter(g: Graph, levels: Array<Array<Vertex>>, interCount: number = 10): Array<Array<Vertex>> {
   // phase 1
   if (levels.length <= 1) {
     return levels;
