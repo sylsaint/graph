@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
 import { Sugiyama } from '../algos/sugiyama'
 
-describe('Position layout 3', () => {
+describe('Sugiyama layout 3', () => {
   let vertices: Array<Vertex> = [];
   for (let i: number = 0; i < 21; i++) {
     vertices.push(new Vertex(i));
@@ -14,11 +14,11 @@ describe('Position layout 3', () => {
   edges.push(new Edge(vertices[0], vertices[2]));
   edges.push(new Edge(vertices[0], vertices[11]));
   edges.push(new Edge(vertices[0], vertices[12]));
-  edges.push(new Edge(vertices[0], vertices[13]));
-  edges.push(new Edge(vertices[0], vertices[14]));
+  edges.push(new Edge(vertices[0], vertices[15]));
   edges.push(new Edge(vertices[0], vertices[16]));
   edges.push(new Edge(vertices[0], vertices[17]));
-  edges.push(new Edge(vertices[0], vertices[20]));
+  edges.push(new Edge(vertices[0], vertices[18]));
+  edges.push(new Edge(vertices[0], vertices[19]));
   edges.push(new Edge(vertices[2], vertices[3]));
   edges.push(new Edge(vertices[2], vertices[4]));
   edges.push(new Edge(vertices[2], vertices[5]));
@@ -29,14 +29,14 @@ describe('Position layout 3', () => {
   edges.push(new Edge(vertices[2], vertices[10]));
   edges.push(new Edge(vertices[3], vertices[11]));
   edges.push(new Edge(vertices[5], vertices[12]));
-  edges.push(new Edge(vertices[6], vertices[20]));
+  edges.push(new Edge(vertices[5], vertices[13]));
+  edges.push(new Edge(vertices[5], vertices[14]));
+  edges.push(new Edge(vertices[6], vertices[15]));
   edges.push(new Edge(vertices[7], vertices[16]));
   edges.push(new Edge(vertices[8], vertices[17]));
-  edges.push(new Edge(vertices[8], vertices[18]));
-  edges.push(new Edge(vertices[9], vertices[14]));
-  edges.push(new Edge(vertices[10], vertices[13]));
-  edges.push(new Edge(vertices[10], vertices[15]));
+  edges.push(new Edge(vertices[9], vertices[18]));
   edges.push(new Edge(vertices[10], vertices[19]));
+  edges.push(new Edge(vertices[10], vertices[20]));
 
 
   const g: Graph = new Graph(vertices, edges, { directed: true });

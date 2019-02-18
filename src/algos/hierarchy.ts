@@ -1,5 +1,5 @@
 import Graph, { Vertex, Edge } from '../misc/graph';
-import { cloneGraph, findVertexById, getDummyId, printVertexNeighbours } from '../misc/graphUtil';
+import { cloneGraph, findVertexById, getDummyId } from '../misc/graphUtil';
 
 export function makeHierarchy(g: Graph): Array<Array<Vertex>> {
   let roots: Array<Vertex> = [];
@@ -123,28 +123,39 @@ function addDummy(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> 
   levels.map(level => {
     level.map((v, idx) => {
       const currentLevel: number = v.getOptions('level');
+      const dummyVertice: Array<Vertex> = [];
+      const dummyEdges: Array<Edge> = [];
+      const excludeEdges: Array<Edge> = [];
       v.edges.map(edge => {
-        if (edge.up == v) {
-          let down: Vertex = edge.down;
-          const nextLevel: number = down.getOptions('level');
-          let up: Vertex = v;
-          if (nextLevel - currentLevel > 1) {
-            for (let lvl: number = currentLevel + 1; lvl < nextLevel; lvl++) {
-              let dummpyVertex: Vertex = new Vertex(getDummyId(), { level: lvl, type: 'dummy' });
-              g.addVertex(dummpyVertex);
-              g.addEdge(new Edge(up, dummpyVertex));
-              up = dummpyVertex;
-              if (idx >= levels[lvl - 1].length) {
-                levels[lvl - 1].push(dummpyVertex);
-              } else {
-                levels[lvl - 1].splice(idx, 0, dummpyVertex);
-              }
+        if (edge.up != v) return;
+        let down: Vertex = edge.down;
+        const nextLevel: number = down.getOptions('level');
+        let up: Vertex = v;
+        if (nextLevel - currentLevel > 1) {
+          for (let lvl: number = currentLevel + 1; lvl < nextLevel; lvl++) {
+            let dummpyVertex: Vertex = new Vertex(getDummyId(), { level: lvl, type: 'dummy' });
+            dummyVertice.push(dummpyVertex);
+            dummyEdges.push(new Edge(up, dummpyVertex));
+            up = dummpyVertex;
+            if (idx >= levels[lvl - 1].length) {
+              levels[lvl - 1].push(dummpyVertex);
+            } else {
+              levels[lvl - 1].splice(idx, 0, dummpyVertex);
             }
-            g.addEdge(new Edge(up, down));
-            g.removeEdge(edge);
           }
+          dummyEdges.push(new Edge(up, down));
+          excludeEdges.push(edge);
         }
       });
+      dummyVertice.map(v => {
+        g.addVertex(v);
+      });
+      dummyEdges.map(e => {
+        g.addEdge(e);
+      });
+      excludeEdges.map(e => {
+        g.removeEdge(e);
+      })
     });
   });
   return levels;
