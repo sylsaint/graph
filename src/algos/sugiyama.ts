@@ -18,11 +18,11 @@
 import Graph, { Vertex } from '../misc/graph';
 import { divide } from './weakconnect';
 import { makeHierarchy } from './hierarchy';
-import { cloneGraph } from '../misc/graphUtil';
-import { penaltyMethod } from './penaltymethod';
+import { cloneGraph, printVertexNeighbours } from '../misc/graphUtil';
 import { position } from './prioritylayout';
 import { LayoutOptions } from '../misc/interface';
 import { defaultOptions } from '../misc/constant';
+import { nbarycenter } from './barycentric';
 
 export class Sugiyama {
   constructor() { }
@@ -36,7 +36,7 @@ export class Sugiyama {
     return makeHierarchy(g);
   }
   private cross(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> {
-    return penaltyMethod(g, levels);
+    return nbarycenter(g, levels);
   }
   private position(g: Graph, levels: Array<Array<Vertex>>, options?: LayoutOptions): Graph {
     return position(g, levels, options);
