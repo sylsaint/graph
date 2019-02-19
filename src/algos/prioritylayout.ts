@@ -42,6 +42,13 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
     const ups: Array<Vertex> = levels[i - 1];
     doProcedure(ups, downs, true);
   }
+  // down procedure
+  for (let i: number = 1; i < levels.length - 1; i++) {
+    const ups: Array<Vertex> = levels[i];
+    const downs: Array<Vertex> = levels[i + 1];
+    doProcedure(ups, downs);
+  }
+
   g.vertices.map(v => {
     v.setOptions('x', left + (v.getOptions(PX) - 1) * (width + gutter));
     v.setOptions('y', top + (v.getOptions(PY) - 1) * (height + gutter));
@@ -94,7 +101,6 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
   const orderList: Array<Order> = vertices.map((v, idx) => { return { value: v.getOptions(priorityKey), idx } }).sort((a, b) => {
     return a.value < b.value ? 1 : -1;
   });
-  const posMap: { [key: number]: boolean } = {};
   orderList.map(order => {
     const v: Vertex = vertices[order.idx];
     const bary: number = reverse ? BikL(downs, v) : BikU(ups, v);
@@ -102,7 +108,78 @@ function doProcedure(ups: Array<Vertex>, downs: Array<Vertex>, reverse: boolean 
     const reorderPos: number = parseInt(Math.floor(bary).toString());
     const origPos: number = v.getOptions(PX);
     const shift: number = reorderPos - origPos;
-    if (shift <= 0) { return; }
+    if (shift < 0) {
+      let pivot: number = order.idx;
+      for (let i: number = order.idx - 1; i > -1; i--) {
+        if (vertices[i].getOptions(priorityKey) >= order.value) {
+          pivot = i;
+          break;
+        }
+      }
+      if (pivot === order.idx) {
+        // if vertex can be placed into the expected position
+        // but we can not move to small than zero
+        if (origPos + shift - order.idx < 0) {
+          // underflow
+          const offset: number = origPos - order.idx;
+          if (offset > 0) {
+            // can move position by offset
+            v.setOptions(PX, origPos - offset);
+            let movePos: number = origPos - offset - 1;
+            for (let i: number = order.idx - 1; i > -1; i--) {
+              if (vertices[i].getOptions(PX) <= movePos) {
+                break;
+              } else {
+                vertices[i].setOptions(PX, movePos);
+                movePos--;
+              }
+            }
+          }
+        } else {
+          v.setOptions(PX, reorderPos);
+          let movePos: number = reorderPos - 1;
+          for (let i: number = order.idx - 1; i > -1; i--) {
+            if (vertices[i].getOptions(PX) <= movePos) {
+              break;
+            } else {
+              vertices[i].setOptions(PX, movePos);
+              movePos--;
+            }
+          }
+        }
+      } else {
+        // if there is a vertex with higher priority
+        const leftMostPos: number = vertices[pivot].getOptions(PX);
+        if (leftMostPos < reorderPos - (order.idx - pivot)) {
+          // if there is enough space for position
+          v.setOptions(PX, reorderPos);
+          let movePos: number = reorderPos - 1;
+          for (let i: number = order.idx - 1; i > -1; i--) {
+            if (vertices[i].getOptions(PX) <= movePos) {
+              break;
+            } else {
+              vertices[i].setOptions(PX, movePos);
+              movePos--;
+            }
+          }
+        } else {
+          const offset: number = origPos - leftMostPos - (order.idx - pivot);
+          if (offset > 0) {
+            // can move position by offset
+            v.setOptions(PX, origPos - offset);
+            let movePos: number = origPos - offset - 1;
+            for (let i: number = order.idx - 1; i > -1; i--) {
+              if (vertices[i].getOptions(PX) <= movePos) {
+                break;
+              } else {
+                vertices[i].setOptions(PX, movePos);
+                movePos--;
+              }
+            }
+          }
+        }
+      }
+    }
     if (shift > 0) {
       let pivot: number = order.idx;
       for (let i: number = order.idx + 1; i < vertices.length; i++) {
