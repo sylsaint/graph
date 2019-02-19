@@ -22,3 +22,13 @@ export interface VerticeMap {
   [key: number]: Array<Vertex>;
   [key: string]: Array<Vertex>;
 }
+
+export interface Priority {
+  up: number;
+  down: number;
+}
+
+export interface Order {
+  value: number;
+  idx: number;
+}

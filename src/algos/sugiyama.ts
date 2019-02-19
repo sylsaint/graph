@@ -18,7 +18,7 @@
 import Graph, { Vertex } from '../misc/graph';
 import { divide } from './weakconnect';
 import { makeHierarchy } from './hierarchy';
-import { cloneGraph, printVertexNeighbours } from '../misc/graphUtil';
+import { cloneGraph } from '../misc/graphUtil';
 import { position } from './prioritylayout';
 import { LayoutOptions } from '../misc/interface';
 import { defaultOptions } from '../misc/constant';

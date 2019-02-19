@@ -46,7 +46,7 @@ describe('Sugiyama layout 3', () => {
     graphs.map(g => {
       console.log('***** vertices *****', g.vertices.length);
       console.log(
-        g.vertices.map(v => `${v.id}: level[${v.getOptions('level')}], x[${v.getOptions('x')}]`).join('\n'),
+        g.vertices.map(v => `${v.id}: level[${v.getOptions('y')}], x[${v.getOptions('x')}]`).join('\n'),
       );
     });
     expect(graphs.length).to.equal(1);

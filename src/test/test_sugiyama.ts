@@ -20,7 +20,7 @@ describe('Sugiyama', () => {
     graphs.map(g => {
       console.log('***** vertices *****', g.vertices.length);
       console.log(
-        g.vertices.map(v => `${v.id}: ${v.getOptions('level')}, ${v.getOptions('x')}, ${v.getOptions('y')}`).join('\n'),
+        g.vertices.map(v => `${v.id}: ${v.getOptions('y')}, ${v.getOptions('x')}`).join('\n'),
       );
     });
     expect(graphs.length).to.equal(2);

@@ -42,7 +42,7 @@ describe('Position layout 2', () => {
     nLevels.map((level, idx) => {
       console.log('level ', idx + 1);
       level.map(v => {
-        console.log(`${v.id}: ${v.getOptions('x')}, ${v.getOptions('level')}`);
+        console.log(`${v.id}: ${v.getOptions('x')}, ${v.getOptions('y')}`);
       })
     })
   });

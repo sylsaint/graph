@@ -5,3 +5,7 @@ export const defaultOptions: LayoutOptions = {
   height: 50,
   gutter: 0,
 };
+
+export const PX = '_x';
+export const PY = '_y';
+export const DUMMY = 'dummy';

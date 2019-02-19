@@ -55,6 +55,11 @@ export class Vertex {
   setOptions(name: string, value: any) {
     this._options[name] = value;
   }
+  removeOptions(name: string): any {
+    const v: any = this._options[name];
+    delete this._options[name];
+    return v;
+  }
 }
 
 /*
