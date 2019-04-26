@@ -9,3 +9,8 @@ export const defaultOptions: LayoutOptions = {
 export const PX = '_x';
 export const PY = '_y';
 export const DUMMY = 'dummy';
+
+export const LEFT = 'left';
+export const RIGHT = 'right';
+export const UPPER = 'upper';
+export const LOWER = 'lower';

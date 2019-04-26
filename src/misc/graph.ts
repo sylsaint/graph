@@ -99,7 +99,10 @@ export class Edge {
   get options(): object {
     return this._options;
   }
-  setOptions(name: string, value: any) {
+  getOptions(name: any) {
+    return this._options[name];
+  }
+  setOptions(name: any, value: any) {
     this._options[name] = value;
   }
 }
@@ -120,6 +123,13 @@ export default class Graph {
   }
   findVertex(v: Vertex): number {
     return this._vertices.indexOf(v);
+  }
+  getVertexById(vid: number): Vertex {
+    let idx: number = -1;
+    this._vertices.map((v, i) => {
+      if (v.id === vid) idx = i;
+    })
+    return this._vertices[idx];
   }
   hasVertex(v: Vertex): boolean {
     let hasV: boolean = this.findVertex(v) > -1;

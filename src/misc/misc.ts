@@ -19,3 +19,17 @@ function hasEdge(from: Vertex, to: Vertex): boolean {
   });
   return exist;
 }
+
+export function range(from: number, to: number, step?: number): Array<number> {
+  const sign = from < to ? 1 : -1;
+  step = Math.abs(step || 1) * sign;
+  let length = Math.ceil((to - from) / step);
+  const rt = Array(length + 1);
+  let index = -1;
+  while (length--) {
+    rt[++index] = from;
+    from += step;
+  }
+  rt[++index] = to;
+  return rt;
+}

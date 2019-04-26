@@ -32,3 +32,10 @@ export interface Order {
   value: number;
   idx: number;
 }
+
+export interface BKOptions {
+  root: object,
+  align: object,
+  sink: object,
+  shift: object,
+}
