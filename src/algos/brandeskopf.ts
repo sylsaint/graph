@@ -193,24 +193,28 @@ function verticalAlignment(levels: Array<Array<Vertex>>, v: string, h: string): 
 /*
 * horizontal compaction
 */
-function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions) {
+function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions): object {
   const { root } = bkOptions;
   const sink: object = {};
   const shift: object = {};
   const xcoordinate: object = {};
   levels.map(vertices => {
-    vertices.map((v, idx) => {
+    vertices.map(v => {
       sink[v.id] = v.id;
       shift[v.id] = Number.POSITIVE_INFINITY;
-    })
-  })
+    });
+  });
   bkOptions.shift = shift;
   bkOptions.sink = sink;
+
+  // place block
   levels.map(vertices => {
-    vertices.map(v => {
+    vertices.map((v, idx) => {
       if (root[v.id] === v.id) placeBlock(v, xcoordinate, bkOptions, options);
-    })
-  })
+    });
+  });
+
+  // calculate absolute position
   levels.map(vertices => {
     vertices.map(v => {
       xcoordinate[v.id] = xcoordinate[root[v.id]];
@@ -219,6 +223,7 @@ function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions
       }
     })
   })
+  return xcoordinate;
 }
 
 function placeBlock(v: Vertex, x: object, bkOptions: BKOptions, options: LayoutOptions) {
