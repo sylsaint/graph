@@ -4,6 +4,7 @@ export const defaultOptions: LayoutOptions = {
   width: 100,
   height: 50,
   gutter: 0,
+  delta: 1,
 };
 
 export const PX = '_x';

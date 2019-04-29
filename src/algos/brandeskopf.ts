@@ -19,9 +19,14 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
   for (let h of [LEFT, RIGHT]) {
     for (let v of [UPPER, LOWER]) {
       console.log('alignment: ', h, v);
-      const { root, align } = verticalAlignment(levels, v, h);
+      const bkOptions: BKOptions = verticalAlignment(levels, v, h);
+      const { root, align } = bkOptions;
       console.log(root);
+      console.log('==============');
+      horizontalCompaction(levels, bkOptions, options);
+      break;
     }
+    break;
   }
   return g;
 }
@@ -206,48 +211,49 @@ function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions
   });
   bkOptions.shift = shift;
   bkOptions.sink = sink;
-
-  // place block
-  levels.map(vertices => {
-    vertices.map((v, idx) => {
-      if (root[v.id] === v.id) placeBlock(v, xcoordinate, bkOptions, options);
-    });
-  });
-
+  placeBlock(levels, bkOptions, options, xcoordinate);
   // calculate absolute position
+  const xs: object = {};
   levels.map(vertices => {
     vertices.map(v => {
-      xcoordinate[v.id] = xcoordinate[root[v.id]];
+      xs[v.id] = xcoordinate[root[v.id]];
       if (shift[sink[root[v.id]]] < Number.POSITIVE_INFINITY) {
-        xcoordinate[v.id] = xcoordinate[v.id] + shift[sink[root[v.id]]];
+        xs[v.id] = xs[v.id] + shift[sink[root[v.id]]];
       }
     })
   })
-  return xcoordinate;
+  console.log(xs);
+  return xs;
 }
 
-function placeBlock(v: Vertex, x: object, bkOptions: BKOptions, options: LayoutOptions) {
-  const { root, align, sink, shift } = bkOptions;
-  // push vertices into stack
-
-  if (x[v.id] === undefined) {
-    x[v.id] = 0;
-    let w: Vertex = v;
-    do {
-      if (w.getOptions('pos') > 0) {
-        const u: Vertex = root[predecessor(w).id];
-        placeBlock(u, x, bkOptions, options);
-        if (sink[v.id] === v.id) sink[v.id] = sink[u.id];
-        if (sink[v.id] !== sink[u.id]) {
-          shift[sink[u.id]] = Math.min(shift[sink[u.id]], x[v.id] - x[u.id]);
+function placeBlock(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions, xcoordinate: object) {
+  // place block
+  // modified version of original without recursion
+  // find largest width of levels
+  const { sink, shift, root, align } = bkOptions;
+  const { delta } = options;
+  for (let v = 0; v < levels.length; v++) {
+    for (let h = 0; h < levels[v].length; h++) {
+      const vx: Vertex = levels[v][h];
+      const vrid: any = root[vx.id];
+      if (xcoordinate[vrid] === undefined) {
+        xcoordinate[vrid] = 0;
+      }
+      if (h > 0) {
+        const pred: Vertex = levels[v][h - 1];
+        const urid: any = root[pred.id];
+        if (sink[vrid] === vrid) sink[vrid] = sink[urid];
+        if (sink[vrid] !== sink[urid]) {
+          shift[sink[urid]] = Math.min(shift[sink[urid]], xcoordinate[vrid] - xcoordinate[urid] - delta);
         } else {
-          x[v.id] = Math.max(x[v.id], x[u.id]);
+          xcoordinate[vrid] = Math.max(xcoordinate[vrid], xcoordinate[urid] + delta);
         }
       }
-      w = align[w.id];
-    } while (w !== v);
+    }
   }
 }
+
+
 
 function predecessor(w: Vertex): Vertex {
   return w.getOptions('predecessor');
