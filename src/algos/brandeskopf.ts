@@ -4,11 +4,16 @@ import { defaultOptions, LEFT, RIGHT, UPPER, LOWER, DUMMY, PY } from '../misc/co
 import { range } from '../misc/misc';
 
 /*
-* Based on Ulrik Brandes and Boris Kopf paper "Fast and Simple Horizontal Coordinate Assignment"
-*/
+ * Based on Ulrik Brandes and Boris Kopf paper "Fast and Simple Horizontal Coordinate Assignment"
+ */
 export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
   // initial horizontal position
   options = { ...defaultOptions, ...options };
+  levels.map((level, h) => {
+    level.map(v => {
+      v.setOptions(PY, h);
+    });
+  });
   preprocess(levels);
   type1Conflicts(levels);
   const xss: object = {};
@@ -44,21 +49,21 @@ function preprocess(levels: Array<Array<Vertex>>) {
   levels.map((level, h) => {
     level.map((v, idx) => {
       v.setOptions('order', idx);
-      v.setOptions(PY, h);
     });
   });
 }
 
 /*
-* Type 1 conflicts arise when a non-inner segment crosses an inner segment.
-* Again because vertical inner segments are preferable, they are resolved in favor
-* of the inner segment. The algorithm traverses layers from left to right (index l) while
-* maintaining the upper neighbors, v(i)^k0 and v(i)^k1 , of the two closest inner segments.
-*/
+ * Type 1 conflicts arise when a non-inner segment crosses an inner segment.
+ * Again because vertical inner segments are preferable, they are resolved in favor
+ * of the inner segment. The algorithm traverses layers from left to right (index l) while
+ * maintaining the upper neighbors, v(i)^k0 and v(i)^k1 , of the two closest inner segments.
+ */
 function type1Conflicts(levels: Array<Array<Vertex>>) {
   const ht: number = levels.length;
   for (let i: number = 1; i < ht - 1; i++) {
-    let k0: number = 0, l: number = 1;
+    let k0: number = 0,
+      l: number = 1;
     const wh: number = levels[i + 1].length;
     for (let l1: number = 0; l1 < wh; l1++) {
       const vn: Vertex = levels[i + 1][l1];
@@ -101,7 +106,7 @@ function hasInnerSegment(vn: Vertex): boolean {
     if (edge.down === vn && isDummyNode(edge.up)) {
       inner = true;
     }
-  })
+  });
   return inner;
 }
 
@@ -127,7 +132,7 @@ function upperNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
     if (edge.down === vn) {
       ups.push([edge.up, edge]);
     }
-  })
+  });
   return ups;
 }
 
@@ -138,7 +143,7 @@ function lowerNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
     if (edge.up === vn) {
       downs.push([edge.down, edge]);
     }
-  })
+  });
   return downs;
 }
 
@@ -148,13 +153,13 @@ function getLayeredNeighbours(v: Vertex, upOrDown: string): Array<[Vertex, Edge]
 }
 
 /*
-* Vertical Alignment
-* in every layer we process the vertices from left to right and for each vertex we 
-* consider its median upper neighbor (its left and right median upper neighbor, in 
-* this order, if there are two). The pair is aligned, if no conflicting alignment is 
-* left of this one. The resulting bias is mediated by the fact that the symmetric bias 
-* is applied in one of the other three assignments.
-*/
+ * Vertical Alignment
+ * in every layer we process the vertices from left to right and for each vertex we
+ * consider its median upper neighbor (its left and right median upper neighbor, in
+ * this order, if there are two). The pair is aligned, if no conflicting alignment is
+ * left of this one. The resulting bias is mediated by the fact that the symmetric bias
+ * is applied in one of the other three assignments.
+ */
 
 function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOptions {
   const root: object = {};
@@ -194,9 +199,14 @@ function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOp
 }
 
 /*
-* horizontal compaction
-*/
-function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions, horizon: string): object {
+ * horizontal compaction
+ */
+function horizontalCompaction(
+  levels: Array<Array<Vertex>>,
+  bkOptions: BKOptions,
+  options: LayoutOptions,
+  horizon: string,
+): object {
   const { root } = bkOptions;
   const sink: object = {};
   const shift: object = {};
@@ -218,8 +228,8 @@ function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions
       if (shift[sink[root[v.id]]] < Number.POSITIVE_INFINITY) {
         xs[v.id] = xs[v.id] + shift[sink[root[v.id]]];
       }
-    })
-  })
+    });
+  });
   if (horizon === RIGHT) {
     return reversePos(xs);
   }
@@ -285,7 +295,9 @@ function balance(g: Graph, xss: object, options: LayoutOptions): Graph {
   const { width, height, gutter, padding } = options;
   const { left, top } = padding;
   g.vertices.map(v => {
-    const posList: Array<number> = Object.keys(xss).map(key => xss[key][v.id]).sort();
+    const posList: Array<number> = Object.keys(xss)
+      .map(key => xss[key][v.id])
+      .sort();
     const xs: number = (posList[1] + posList[2]) / 2;
     v.setOptions('x', left + xs * (width + gutter));
     v.setOptions('y', top + v.getOptions(PY) * (height + gutter));
