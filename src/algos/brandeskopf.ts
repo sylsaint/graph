@@ -1,6 +1,6 @@
 import Graph, { Vertex, Edge } from '../misc/graph';
 import { LayoutOptions, BKOptions } from '../misc/interface';
-import { defaultOptions, LEFT, RIGHT, UPPER, LOWER, DUMMY } from '../misc/constant';
+import { defaultOptions, LEFT, RIGHT, UPPER, LOWER, DUMMY, PY } from '../misc/constant';
 import { range } from '../misc/misc';
 
 /*
@@ -9,34 +9,42 @@ import { range } from '../misc/misc';
 export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
   // initial horizontal position
   options = { ...defaultOptions, ...options };
-  const { left, right, top, bottom } = options.padding;
-  const { width, height, gutter } = options;
-  console.log('preprocess...');
   preprocess(levels);
-  console.log('type 1 conflicts...');
   type1Conflicts(levels);
-  console.log('vertical alignment...');
+  const xss: object = {};
   for (let h of [LEFT, RIGHT]) {
     for (let v of [UPPER, LOWER]) {
-      console.log('alignment: ', h, v);
-      const bkOptions: BKOptions = verticalAlignment(levels, v, h);
+      const transformed = transformLayers(levels, v, h);
+      preprocess(transformed);
+      const bkOptions: BKOptions = verticalAlignment(transformed, v);
       const { root, align } = bkOptions;
-      console.log(root);
-      console.log('==============');
-      horizontalCompaction(levels, bkOptions, options);
-      break;
+      const xs: object = horizontalCompaction(transformed, bkOptions, options, h);
+      xss[`${h}-${v}`] = xs;
     }
-    break;
   }
-  return g;
+  return balance(g, xss, options);
+}
+
+function transformLayers(levels: Array<Array<Vertex>>, vertical: string, horizon: string): Array<Array<Vertex>> {
+  let transformed: Array<Array<Vertex>> = [...levels];
+  if (vertical === LOWER) {
+    transformed = transformed.reverse();
+  }
+  if (horizon === RIGHT) {
+    transformed = transformed.map(vertices => {
+      const rt: Array<Vertex> = [...vertices.reverse()];
+      vertices.reverse();
+      return rt;
+    });
+  }
+  return transformed;
 }
 
 function preprocess(levels: Array<Array<Vertex>>) {
-  levels.map(level => {
+  levels.map((level, h) => {
     level.map((v, idx) => {
       v.setOptions('order', idx);
-      v.setOptions('predecessor', level[idx - 1]);
-      v.setOptions('successor', level[idx + 1]);
+      v.setOptions(PY, h);
     });
   });
 }
@@ -148,7 +156,7 @@ function getLayeredNeighbours(v: Vertex, upOrDown: string): Array<[Vertex, Edge]
 * is applied in one of the other three assignments.
 */
 
-function verticalAlignment(levels: Array<Array<Vertex>>, v: string, h: string): BKOptions {
+function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOptions {
   const root: object = {};
   const align: object = {};
   levels.map(vs => {
@@ -157,31 +165,21 @@ function verticalAlignment(levels: Array<Array<Vertex>>, v: string, h: string): 
       align[v.id] = v.id;
     });
   });
-  const ht: number = levels.length;
-  const vstart: number = v === UPPER ? 0 : ht - 1;
-  const vend: number = v === UPPER ? ht - 1 : 0;
-  const vrange = range(vstart, vend);
-  vrange.map(i => {
-    const wd = levels[i].length;
-    let r: number = h === LEFT ? -1 : wd;
-    const hstart: number = h === LEFT ? 0 : wd - 1;
-    const hend: number = h === LEFT ? wd - 1 : 0;
-    const hrange = range(hstart, hend);
-    hrange.map(k => {
-      const vki: Vertex = levels[i][k];
-      const neighbours: Array<[Vertex, Edge]> = getLayeredNeighbours(vki, v);
+  levels.map((vertices, i) => {
+    let r: number = -1;
+    vertices.map((vki, k) => {
+      const neighbours: Array<[Vertex, Edge]> = getLayeredNeighbours(vki, vertical);
       if (!neighbours.length) return;
       let floor: number = Math.floor((neighbours.length + 1) / 2) - 1;
       let ceil: number = Math.ceil((neighbours.length + 1) / 2) - 1;
-      let [mstart, mend] = h === LEFT ? [floor, ceil] : [ceil, floor];
-      const mrange = range(mstart, mend);
+      const mrange = range(floor, ceil);
       mrange.map(m => {
         if (align[vki.id] === vki.id) {
           const neighbour: [Vertex, Edge] = neighbours[m];
           const um: Vertex = neighbour[0];
           const edge: Edge = neighbour[1];
           const pos: number = getPos(um);
-          const rpos: boolean = h === LEFT ? r < pos : r > pos;
+          const rpos: boolean = r < pos;
           if (!edge.getOptions('conflict') && rpos) {
             align[um.id] = vki.id;
             root[vki.id] = root[um.id];
@@ -198,7 +196,7 @@ function verticalAlignment(levels: Array<Array<Vertex>>, v: string, h: string): 
 /*
 * horizontal compaction
 */
-function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions): object {
+function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions, horizon: string): object {
   const { root } = bkOptions;
   const sink: object = {};
   const shift: object = {};
@@ -222,7 +220,9 @@ function horizontalCompaction(levels: Array<Array<Vertex>>, bkOptions: BKOptions
       }
     })
   })
-  console.log(xs);
+  if (horizon === RIGHT) {
+    return reversePos(xs);
+  }
   return xs;
 }
 
@@ -253,24 +253,45 @@ function placeBlock(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options:
   }
 }
 
-
-
-function predecessor(w: Vertex): Vertex {
-  return w.getOptions('predecessor');
+function findSmallestWidth(xss: object): number {
+  let smallestWidth: number = Number.POSITIVE_INFINITY;
+  let align: string = '';
+  for (let h of [LEFT, RIGHT]) {
+    for (let v of [UPPER, LOWER]) {
+      const xs: object = xss[`${h}-${v}`];
+      const width: number = Math.max.apply(null, Object.keys(xs).map(key => xs[key]));
+      if (width < smallestWidth) {
+        smallestWidth = width;
+        align = h;
+      }
+    }
+  }
+  return smallestWidth;
 }
 
-function successor(w: Vertex): Vertex {
-  return w.getOptions('successor');
+function reversePos(xs: object): object {
+  let max: number = 0;
+  const rt: object = {};
+  Object.keys(xs).map(key => {
+    if (xs[key] > max) max = xs[key];
+  });
+  Object.keys(xs).map(key => {
+    rt[key] = max - xs[key];
+  });
+  return rt;
 }
 
-function balance() {
-
-}
-
-function findSmallestWidth() {
-
-}
-
-function alignCoordinate() {
-
+function balance(g: Graph, xss: object, options: LayoutOptions): Graph {
+  const { width, height, gutter, padding } = options;
+  const { left, top } = padding;
+  g.vertices.map(v => {
+    const posList: Array<number> = Object.keys(xss).map(key => xss[key][v.id]).sort();
+    const xs: number = (posList[1] + posList[2]) / 2;
+    v.setOptions('x', left + xs * (width + gutter));
+    v.setOptions('y', top + v.getOptions(PY) * (height + gutter));
+    v.removeOptions(PY);
+    v.removeOptions('order');
+    v.removeOptions('conflict');
+  });
+  return g;
 }
