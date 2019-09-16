@@ -40,3 +40,8 @@ export interface BKOptions {
   sink: object,
   shift: object,
 }
+
+export interface Coordinate {
+  x: number;
+  y: number;
+}
