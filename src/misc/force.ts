@@ -17,7 +17,7 @@ export interface Force {
 // 此处计算矢量形式，并且将模型简化为 F = repulsion / r^2
 export function coulombForce(repulsion: number, r: number, p1: Coordinate, p2: Coordinate): Force {
   return {
-    value: repulsion / (r * r),
+    value: repulsion * repulsion / (r * r),
     direct: { x: p1.x - p2.x, y: p1.y - p2.y },
   };
 }
@@ -26,6 +26,6 @@ export function coulombForce(repulsion: number, r: number, p1: Coordinate, p2: C
 export function hookeForce(stiffness: number, delta: number, p1: Coordinate, p2: Coordinate): Force {
   return {
     value: stiffness * delta,
-    direct: { x: p1.x - p2.x, y: p1.y - p2.y },
+    direct: { x: p2.x - p1.x, y: p2.y - p1.y },
   }
 }

@@ -1,6 +1,6 @@
 import { Node, Edge, RectArea, QuadTree } from '../misc/quadtree';
 
-export function dividePlane(qt: QuadTree, levels: number = 5, area?: RectArea) {
+export function dividePlane(qt: QuadTree, levels: number = 5, area?: RectArea): QuadTree | undefined {
   if (levels < 0) return;
   const nodes: Node[] = qt.nodes;
   if (area) {
@@ -9,7 +9,6 @@ export function dividePlane(qt: QuadTree, levels: number = 5, area?: RectArea) {
     qt.area = makeRectangle(nodes);
   }
   qt.setNodes(nodes);
-  console.log(qt.nodes.length);
   // 水平和垂直的中心点
   const hmid: number = (qt.area.x1 + qt.area.x) / 2;
   const vmid: number = (qt.area.y1 + qt.area.y) / 2;

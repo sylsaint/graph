@@ -1,6 +1,7 @@
 import { Coordinate } from "./interface";
 
 export interface Node {
+  id: string;
   x: number;
   y: number;
   size?: number;
@@ -29,9 +30,9 @@ export class QuadTree {
     this.calcCentroid(nodes);
   }
   calcCentroid(nodes: Node[]) {
-    this.centroid.x = nodes.map((node: Node) => node.x * (node.size || 1)).reduce((a: number, b: number) => a + b) / nodes.length;
-    this.centroid.y = nodes.map((node: Node) => node.y * (node.size || 1)).reduce((a: number, b: number) => a + b) / nodes.length;
-    this.centroidSize = nodes.map((node: Node) => node.size || 1).reduce((a: number, b: number) => a + b);
+    this.centroid.x = nodes.map((node: Node) => node.x * (node.size || 1)).reduce((a: number, b: number) => a + b, 0) / nodes.length;
+    this.centroid.y = nodes.map((node: Node) => node.y * (node.size || 1)).reduce((a: number, b: number) => a + b, 0) / nodes.length;
+    this.centroidSize = nodes.map((node: Node) => node.size || 1).reduce((a: number, b: number) => a + b, 0);
   }
   get area(): RectArea {
     return this._area;
