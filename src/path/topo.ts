@@ -18,6 +18,7 @@ export function topologicalSort(graph: Graph): Vertex[] {
         const vertexStack: Vertex[] = [vertex];
         while(vertexStack.length) {
             const vt: Vertex = vertexStack.pop() as Vertex;
+            if (visited[vt.id]) continue;
             if (neighboursMap[vt.id].length === 0) {
                 sorted.push(vt);
                 visited[vt.id] = true;
