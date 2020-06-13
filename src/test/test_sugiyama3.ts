@@ -43,12 +43,14 @@ describe('Sugiyama layout 3', () => {
   let sug: Sugiyama = new Sugiyama();
   it('#layout', () => {
     const graphs: Array<Graph> = sug.layout(g);
+    /*
     graphs.map(g => {
       console.log('***** vertices *****', g.vertices.length);
       console.log(
         g.vertices.map(v => `${v.id}: level[${v.getOptions('y')}], x[${v.getOptions('x')}]`).join('\n'),
       );
     });
+    */
     expect(graphs.length).to.equal(1);
   })
 });

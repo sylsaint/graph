@@ -36,13 +36,13 @@ describe('Position layout 2', () => {
     }
   })
   it('#layout', () => {
-    console.log(nLevels);
+    // console.log(nLevels);
     position(g, nLevels);
-    console.log('nlevels position...');
+    // console.log('nlevels position...');
     nLevels.map((level, idx) => {
-      console.log('level ', idx + 1);
+      // console.log('level ', idx + 1);
       level.map(v => {
-        console.log(`${v.id}: ${v.getOptions('x')}, ${v.getOptions('y')}`);
+        // console.log(`${v.id}: ${v.getOptions('x')}, ${v.getOptions('y')}`);
       })
     })
   });

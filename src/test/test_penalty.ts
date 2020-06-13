@@ -48,13 +48,13 @@ describe('Penalty', () => {
     const dig: Graph = penaltyGraph(W, nLevel);
     const sccs: any = kosaraju(dig);
     const sigmas: Array<Array<Vertex>> = pm(sccs, dig);
-    console.log('== print all the reorder cross count ==');
-    console.log('original cross: ', crossCount(W, nLevel));
+    // console.log('== print all the reorder cross count ==');
+    // console.log('original cross: ', crossCount(W, nLevel));
     sigmas.map(sigma => {
-      console.log(sigma.map(v => v.id + 1).join(','));
+      // console.log(sigma.map(v => v.id + 1).join(','));
       const reorder: Array<Vertex> = sigma.map(v => findVertexById(g, v.id));
       const totalCross: number = crossCount(reorder, nLevel);
-      console.log('cross count: ', totalCross);
+      // console.log('cross count: ', totalCross);
     });
   });
 });
