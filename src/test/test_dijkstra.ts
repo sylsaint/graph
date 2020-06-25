@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { dagShortestPath } from '../path/shortest';
+import { dijkstraShortestPath } from '../path/dijkstra';
 import { Vertex, Edge } from '../path/graph';
 
-describe('DAG shortest path', () => {
+describe('Dijkstra shortest path', () => {
   const v1: Vertex = new Vertex(1); // A
   const v2: Vertex = new Vertex(2); // B
   const v3: Vertex = new Vertex(3); // C
@@ -20,9 +20,10 @@ describe('DAG shortest path', () => {
   v7.setEdges([new Edge(v8, 2)]);
 
   it('#path list', () => {
-      const r = dagShortestPath(v1, v8);
+      const r = dijkstraShortestPath(v1, v8);
       console.log(r);
   });
   
 });
+
 
