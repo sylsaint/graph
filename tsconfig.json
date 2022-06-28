@@ -6,7 +6,11 @@
     "outDir": "./lib",
     "strict": true,
     "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "src"
