@@ -12,6 +12,7 @@
   },
   "scripts": {
     "test": "nyc mocha --require ts-node/register src/test/**/*.ts",
+    "test-bary": "mocha --require ts-node/register src/test/test_barycener.ts",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",

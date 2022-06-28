@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
-import { bc } from '../algos/barycentric';
+import { bc, calcTwoLevelBaryCentric } from '../algos/barycentric';
 
 describe('BaryCentric Method', () => {
   let vertices: Array<Vertex> = [];
   const alphas: Array<string> = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
   alphas.map((alpha, idx) => {
-    vertices.push(new Vertex(idx, { alpha }));
+    vertices.push(new Vertex(idx, { key: alpha }));
   });
   let edges: Array<Edge> = [];
   edges.push(new Edge(vertices[0], vertices[4]));
@@ -25,7 +25,11 @@ describe('BaryCentric Method', () => {
   const ups: Array<Vertex> = vertices.slice(0, 4);
   const downs: Array<Vertex> = vertices.slice(4);
 
-  it('#crossings', () => {
-    bc(ups, downs);
-  });
+  it('Should minimize two level crossings', () => {
+    const { row, col, crossCount } = calcTwoLevelBaryCentric({row: ups, col: downs});
+    expect(row.map(v => v.getOptions('key'))).to.deep.equal(['d', 'a', 'b', 'c']);
+    expect(col.map(v => v.getOptions('key'))).to.deep.equal(['g', 'e', 'i', 'f', 'h']);
+    expect(crossCount).equal(7);
+  })
+
 });
