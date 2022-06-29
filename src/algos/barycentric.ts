@@ -343,7 +343,7 @@ export function calcMulLevelbaryCentric(
   }
 }
 
-export function baryCentric(levels: Vertex[][], options: baryCentricOptions) {
+export function baryCentric(levels: Vertex[][], options: baryCentricOptions = {}) {
   if (levels.length <= 1) return { levels, crossCount: 0 };
   if (levels.length === 2) {
     const {row, col, crossCount } = calcTwoLevelbaryCentric(levels[0], levels[1], options);
