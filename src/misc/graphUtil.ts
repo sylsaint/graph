@@ -12,7 +12,7 @@ export function transpose(g: Graph): Graph {
   return g;
 }
 
-export function findVertexById(g: Graph, vid: number): Vertex {
+export function findVertexById(g: Graph, vid: number | string): Vertex {
   let found: Vertex = new Vertex(getDummyId());
   g.vertices.map(v => {
     if (v.id === vid) found = v;
@@ -38,10 +38,10 @@ export function printVertexNeighbours(g: Graph) {
     let ups: Array<number> = [];
     let downs: Array<number> = [];
     v.edges.map(edge => {
-      if (edge.up == v) downs.push(edge.down.id + 1);
-      if (edge.down == v) ups.push(edge.up.id + 1);
+      if (edge.up == v) downs.push(edge.down.id as number + 1);
+      if (edge.down == v) ups.push(edge.up.id as number + 1);
     });
-    console.log(ups.join(','), '->', v.id + 1, '->', downs.join(','));
+    console.log(ups.join(','), '->', v.id as number + 1, '->', downs.join(','));
   });
 }
 

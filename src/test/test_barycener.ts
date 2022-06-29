@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
 import { baryCentric } from '../algos/barycentric';
+import { vegetables } from './data/data';
 
 describe('BaryCentric Method', () => {
   let vertices: Array<Vertex> = [];
@@ -138,7 +139,24 @@ describe('BaryCentric Method', () => {
 
     const g: Graph = new Graph([...first, ...second, ...third, ...fourth], edges, { directed: true });
     const { levels, crossCount } = baryCentric([first, second, third, fourth], {});
-    console.log(levels.map(vertices => vertices.map(v => v.getOptions('key')).join(', ')).join('\n'));
+    expect(crossCount).equal(0);
+  })
+  it('Should minimize vegetable levels', () => {
+    const vMap: {[key: string]: Vertex } = {};
+    const vLevels = vegetables.map(vertices => {
+      return vertices.map(v => {
+        const vertex = new Vertex(v.id);
+        vMap[v.id] = vertex;
+        return vertex; 
+      });
+    })
+    const edges = vegetables.flatMap(vertices => {
+      return vertices.flatMap(v => {
+        return v.edges.map(edge => new Edge(vMap[edge.from], vMap[edge.to]));
+      });
+    })
+    const g: Graph = new Graph(vLevels.flatMap(vertices => vertices), edges, { directed: true });
+    const { levels, crossCount } = baryCentric(vLevels, {});
     expect(crossCount).equal(0);
   })
 });

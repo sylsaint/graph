@@ -9,10 +9,10 @@
  */
 
 export class Vertex {
-  private _id: number;
+  private _id: number | string;
   private _options: object = { up: 1, down: 1 };
   private adjacents: Array<Edge>;
-  constructor(id: number, opts?: object) {
+  constructor(id: number | string, opts?: object) {
     this._id = id;
     this._options = { ...this._options, ...opts };
     this.adjacents = [];
@@ -46,7 +46,7 @@ export class Vertex {
   get edges(): Array<Edge> {
     return this.adjacents;
   }
-  get id(): number {
+  get id() {
     return this._id;
   }
   getOptions(name: string) {
