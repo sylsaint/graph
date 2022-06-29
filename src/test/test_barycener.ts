@@ -26,10 +26,39 @@ describe('BaryCentric Method', () => {
   const downs: Array<Vertex> = vertices.slice(4);
 
   it('Should minimize two level crossings', () => {
-    const { row, col, crossCount } = calcTwoLevelBaryCentric({row: ups, col: downs});
-    expect(row.map(v => v.getOptions('key'))).to.deep.equal(['d', 'a', 'b', 'c']);
-    expect(col.map(v => v.getOptions('key'))).to.deep.equal(['g', 'e', 'i', 'f', 'h']);
+    const { row, col, crossCount } = calcTwoLevelBaryCentric({ row: ups, col: downs });
+    expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['d', 'a', 'b', 'c']);
+    expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['g', 'e', 'i', 'f', 'h']);
     expect(crossCount).equal(7);
-  })
+  });
+  it('Should minimize two level crossings to zero', () => {
+    let idx = 0;
+    let ups: Vertex[] = [];
+    const alphas: Array<string> = ['a', 'b', 'c'];
+    alphas.map((alpha) => {
+      ups.push(new Vertex(idx++, { key: alpha }));
+    });
+    let downs: Vertex[] = [];
+    const alphaDowns = ['d', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'];
+    alphaDowns.map((alpha) => {
+      downs.push(new Vertex(idx++, { key: alpha }));
+    });
+    let edges: Array<Edge> = [];
+    edges.push(new Edge(ups[0], downs[2]));
+    edges.push(new Edge(ups[0], downs[5]));
+    edges.push(new Edge(ups[0], downs[8]));
+    edges.push(new Edge(ups[1], downs[1]));
+    edges.push(new Edge(ups[1], downs[4]));
+    edges.push(new Edge(ups[1], downs[7]));
+    edges.push(new Edge(ups[2], downs[0]));
+    edges.push(new Edge(ups[2], downs[3]));
+    edges.push(new Edge(ups[2], downs[6]));
 
+    const g: Graph = new Graph([...ups, ...downs], edges, { directed: true });
+
+    const { row, col, crossCount } = calcTwoLevelBaryCentric({ row: ups, col: downs });
+    expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['a', 'b', 'c']);
+    expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['f', 'i', 'l', 'e', 'h', 'k', 'd', 'g', 'j']);
+    expect(crossCount).equal(0);
+  });
 });
