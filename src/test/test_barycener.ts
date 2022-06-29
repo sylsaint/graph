@@ -57,8 +57,8 @@ describe('BaryCentric Method', () => {
     const g: Graph = new Graph([...ups, ...downs], edges, { directed: true });
 
     const { row, col, crossCount } = calcTwoLevelBaryCentric({ row: ups, col: downs });
-    expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['a', 'b', 'c']);
-    expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['f', 'i', 'l', 'e', 'h', 'k', 'd', 'g', 'j']);
+    expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['c', 'b', 'a']);
+    expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['j', 'g', 'd', 'k', 'h', 'e', 'l', 'i', 'f']);
     expect(crossCount).equal(0);
   });
 });
