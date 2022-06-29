@@ -134,6 +134,8 @@ function fineTuneTwoLevelBaryCentric({
   exchanged?: { [key: string]: boolean };
   crossCount?: number;
 }): BcRet {
+  // reach iteration max limit or eliminate all crosses
+  if (iterCnt >= totalCnt || crossCount === 0) return { row, col, crossCount };
   const { rows, cols } = calcBaryCentricCoefficient(row, col);
   const isRowMonotonicallyIncreasing =
     rows.filter((v, i) => {
@@ -168,7 +170,14 @@ function fineTuneTwoLevelBaryCentric({
       })
       .map((order) => row[order.idx]);
     if (allChanged) return { row, col, crossCount };
-    return calcTwoLevelBaryCentric({ row: reOrderedRow, col, iterCnt: iterCnt + 1, totalCnt, exchanged });
+    return calcTwoLevelBaryCentric({
+      row: reOrderedRow,
+      col,
+      iterCnt: iterCnt + 1,
+      totalCnt,
+      exchanged,
+      minCross: crossCount,
+    });
     // if col is not strictly ascending
   } else {
     let allChanged = true;
@@ -191,7 +200,14 @@ function fineTuneTwoLevelBaryCentric({
         return col[order.idx];
       });
     if (allChanged) return { row, col, crossCount };
-    return calcTwoLevelBaryCentric({ row, col: reOrderedCols, iterCnt: iterCnt + 1, totalCnt });
+    return calcTwoLevelBaryCentric({
+      row,
+      col: reOrderedCols,
+      iterCnt: iterCnt + 1,
+      totalCnt,
+      minCross: crossCount,
+      exchanged,
+    });
   }
 }
 
