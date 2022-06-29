@@ -26,7 +26,7 @@ describe('BaryCentric Method', () => {
   const downs: Array<Vertex> = vertices.slice(4);
 
   it('Should minimize two level crossings', () => {
-    const { row, col, crossCount } = calcTwoLevelBaryCentric({ row: ups, col: downs });
+    const { row, col, crossCount } = calcTwoLevelBaryCentric(ups, downs, {});
     expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['d', 'a', 'b', 'c']);
     expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['g', 'e', 'i', 'f', 'h']);
     expect(crossCount).equal(7);
@@ -56,7 +56,7 @@ describe('BaryCentric Method', () => {
 
     const g: Graph = new Graph([...ups, ...downs], edges, { directed: true });
 
-    const { row, col, crossCount } = calcTwoLevelBaryCentric({ row: ups, col: downs });
+    const { row, col, crossCount } = calcTwoLevelBaryCentric(ups, downs, {});
     expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['c', 'b', 'a']);
     expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['j', 'g', 'd', 'k', 'h', 'e', 'l', 'i', 'f']);
     expect(crossCount).equal(0);

@@ -1,4 +1,3 @@
-import milliseconds = require('mocha/lib/ms');
 import Graph, { Vertex } from '../misc/graph';
 import { edgeMatrix } from '../misc/misc';
 import { crossCount } from '../misc/penaltyGraph';
@@ -8,44 +7,65 @@ import { crossCount } from '../misc/penaltyGraph';
  * reduce the number of crossings under the fixed column order \sigma_2 in M(\sigma_1, \sigma_2)
  */
 
-interface OrderWrapper {
+export interface OrderWrapper {
   value: number;
   idx: number;
 }
 
-interface RowCol {
+export interface RowCol {
   rows: Array<number>;
   cols: Array<number>;
 }
 
-interface BcRet {
+export interface BaryCentricResult {
   row: Array<Vertex>;
   col: Array<Vertex>;
   crossCount: number;
 }
 
-export function bc(ups: Array<Vertex>, downs: Array<Vertex>) {
-  calcTwoLevelBaryCentric({ row: ups, col: downs });
-}
+export type BaryCentricOptions = {
+  // current iteration round
+  currentRound?: number;
+  // total iteration round
+  totalRound?: number;
+  // if row is fixed, only col will be permutated
+  rowFixed?: boolean;
+  // if col is fixed, only row will be permutated
+  colFixed?: boolean;
+  // you should not set this, for inner use
+  exchanged?: { [key: string]: boolean };
+  // you should not set this, for inner use
+  minCross?: number;
+  // you should not set this, for inner use
+  crossCount?: number;
+};
+
+const DEFAULT_TOTAL_ROUND = 12;
 
 function getKey(key1: string | number, key2: string | number, reversed: boolean = false) {
   if (reversed) return `${key2}_|_${key1}`;
   return `${key1}_|_${key2}`;
 }
 
-function calcBaryCentricCoefficient(W: Array<Vertex>, nLevel: Array<Vertex>) {
-  const matrix: Array<Array<number>> = edgeMatrix(W, nLevel);
+/**
+ *
+ * @param prevLevel -- vertices at some level
+ * @param nextLevel -- vertices at next level
+ * @returns barycentric coefficient of everty vertex in prevLeven and nextLevel
+ */
+function calcBaryCentricCoefficient(prevLevel: Array<Vertex>, nextLevel: Array<Vertex>) {
+  const matrix: Array<Array<number>> = edgeMatrix(prevLevel, nextLevel);
   let rows: Array<number> = [];
   let cols: Array<number> = [];
-  W.map((_v, idx) => {
+  prevLevel.map((_v, idx) => {
     rows[idx] =
       matrix[idx].map((v, i) => v * (i + 1)).reduce((prev, cur) => prev + cur, 0) /
       (matrix[idx].reduce((prev, cur) => prev + cur, 0) || 1);
   });
-  nLevel.map((_c, idx) => {
+  nextLevel.map((_c, idx) => {
     let weights: number = 0;
     let sum: number = 0;
-    W.map((_v, i) => {
+    prevLevel.map((_v, i) => {
       weights += matrix[i][idx] * (i + 1);
       sum += matrix[i][idx];
     });
@@ -54,88 +74,114 @@ function calcBaryCentricCoefficient(W: Array<Vertex>, nLevel: Array<Vertex>) {
   return { rows, cols };
 }
 
-export function calcTwoLevelBaryCentric({
-  row,
-  col,
-  iterCnt = 0,
-  totalCnt = 12,
-  minCross = Number.POSITIVE_INFINITY,
-  exchanged = {},
-}: {
-  row: Array<Vertex>;
-  col: Array<Vertex>;
-  iterCnt?: number;
-  totalCnt?: number;
-  minCross?: number;
-  exchanged?: { [key: string]: boolean };
-}): BcRet {
+/**
+ *
+ * @description this is a heuristic method which tries to reduce crossings. with calculating barycentric coefficient of every vertex 
+ * and reordering vertext position, this method can reduce crossings effectively.
+ * @param row -- vertices at some level, treated as row
+ * @param col -- vertices at next level, treated as col
+ * @param options -- configuration object to function
+ * @returns
+ */
+export function calcTwoLevelBaryCentric(
+  row: Vertex[],
+  col: Vertex[],
+  {
+    currentRound = 1,
+    totalRound = DEFAULT_TOTAL_ROUND,
+    minCross = Number.POSITIVE_INFINITY,
+    exchanged = {},
+    rowFixed,
+    colFixed,
+  }: BaryCentricOptions,
+): BaryCentricResult {
   const { rows } = calcBaryCentricCoefficient(row, col);
   let KS: number = crossCount(row, col);
   let KSS = KS;
   let rowReOrdered = false;
   let colReOrdered = false;
-  const newRow: Vertex[] = rows
-    .map((r, i) => {
-      return { value: r, idx: i };
-    })
-    .sort((a, b) => {
-      return a.value <= b.value ? -1 : 1;
-    })
-    .map((order) => {
-      return row[order.idx];
-    });
-  KSS = crossCount(newRow, col);
-  if (KSS < KS) {
-    rowReOrdered = true;
-    KS = KSS;
+
+  let newRow = row;
+  if (!rowFixed) {
+    newRow = rows
+      .map((r, i) => {
+        return { value: r, idx: i };
+      })
+      .sort((a, b) => {
+        return a.value <= b.value ? -1 : 1;
+      })
+      .map((order) => {
+        return row[order.idx];
+      });
+    KSS = crossCount(newRow, col);
+    if (KSS < KS) {
+      rowReOrdered = true;
+      KS = KSS;
+    }
   }
-  const { cols } = calcBaryCentricCoefficient(newRow, col);
-  const newCol: Vertex[] = cols
-    .map((r, i) => {
-      return { value: r, idx: i };
-    })
-    .sort((a, b) => {
-      return a.value <= b.value ? -1 : 1;
-    })
-    .map((order) => {
-      return col[order.idx];
-    });
-  KSS = crossCount(newRow, newCol);
-  if (KSS < KS) {
-    colReOrdered = true;
-    KS = KSS;
+
+  let newCol = col;
+  if (!colFixed) {
+    const { cols } = calcBaryCentricCoefficient(newRow, col);
+    newCol = cols
+      .map((r, i) => {
+        return { value: r, idx: i };
+      })
+      .sort((a, b) => {
+        return a.value <= b.value ? -1 : 1;
+      })
+      .map((order) => {
+        return col[order.idx];
+      });
+    KSS = crossCount(newRow, newCol);
+    if (KSS < KS) {
+      colReOrdered = true;
+      KS = KSS;
+    }
   }
   if (KS >= minCross) {
-    return fineTuneTwoLevelBaryCentric({ row, col, iterCnt, totalCnt, exchanged, crossCount: minCross });
+    return finetuneTwoLevelBaryCentric(row, col, {
+      currentRound,
+      totalRound,
+      exchanged,
+      crossCount: minCross,
+      rowFixed,
+      colFixed,
+    });
   } else {
-    return calcTwoLevelBaryCentric({
-      row: rowReOrdered ? newRow : row,
-      col: colReOrdered ? newCol : col,
-      iterCnt,
-      totalCnt,
+    return calcTwoLevelBaryCentric(rowReOrdered ? newRow : row, colReOrdered ? newCol : col, {
+      currentRound,
+      totalRound,
       minCross: KS,
       exchanged,
+      rowFixed,
+      colFixed,
     });
   }
 }
 
-function fineTuneTwoLevelBaryCentric({
-  row,
-  col,
-  iterCnt,
-  totalCnt,
-  exchanged = {},
-  crossCount = Number.POSITIVE_INFINITY,
-}: {
-  row: Array<Vertex>;
-  col: Array<Vertex>;
-  iterCnt: number;
-  totalCnt: number;
-  exchanged?: { [key: string]: boolean };
-  crossCount?: number;
-}): BcRet {
+/**
+ *
+ * @description if there are vertices in row/col which have the same barycentric coefficient, this function would try to exchange
+ * their positions in order to reduce crossings.
+ * @param prevLevel -- vertices at some level
+ * @param nextLevel -- vertices at next level
+ * @returns barycentric coefficient of everty vertex in prevLeven and nextLevel
+ */
+function finetuneTwoLevelBaryCentric(
+  row: Vertex[],
+  col: Vertex[],
+  {
+    currentRound = 1,
+    totalRound = DEFAULT_TOTAL_ROUND,
+    exchanged = {},
+    crossCount = Number.POSITIVE_INFINITY,
+    rowFixed,
+    colFixed,
+  }: BaryCentricOptions,
+): BaryCentricResult {
   // reach iteration max limit or eliminate all crosses
-  if (iterCnt >= totalCnt || crossCount === 0) return { row, col, crossCount };
+  if (currentRound >= totalRound || crossCount === 0) return { row, col, crossCount };
   const { rows, cols } = calcBaryCentricCoefficient(row, col);
   const isRowMonotonicallyIncreasing =
     rows.filter((v, i) => {
@@ -152,6 +198,7 @@ function fineTuneTwoLevelBaryCentric({
     return { row, col, crossCount };
     // if col is strictly ascending
   } else if (isColMonotonicallyIncreasing) {
+    if (rowFixed) return { row, col, crossCount };
     let allChanged = true;
     const reOrderedRow: Vertex[] = rows
       .map((r, i) => {
@@ -170,16 +217,17 @@ function fineTuneTwoLevelBaryCentric({
       })
       .map((order) => row[order.idx]);
     if (allChanged) return { row, col, crossCount };
-    return calcTwoLevelBaryCentric({
-      row: reOrderedRow,
-      col,
-      iterCnt: iterCnt + 1,
-      totalCnt,
+    return calcTwoLevelBaryCentric(reOrderedRow, col, {
+      currentRound: currentRound + 1,
+      totalRound,
       exchanged,
       minCross: crossCount,
+      rowFixed,
+      colFixed,
     });
-    // if col is not strictly ascending
+  // if col is not strictly ascending
   } else {
+    if (colFixed) return { row, col, crossCount };
     let allChanged = true;
     const reOrderedCols: Vertex[] = cols
       .map((r, i) => {
@@ -200,13 +248,13 @@ function fineTuneTwoLevelBaryCentric({
         return col[order.idx];
       });
     if (allChanged) return { row, col, crossCount };
-    return calcTwoLevelBaryCentric({
-      row,
-      col: reOrderedCols,
-      iterCnt: iterCnt + 1,
-      totalCnt,
+    return calcTwoLevelBaryCentric(row, reOrderedCols, {
+      currentRound: currentRound + 1,
+      totalRound,
       minCross: crossCount,
       exchanged,
+      rowFixed,
+      colFixed,
     });
   }
 }
@@ -315,4 +363,8 @@ function hasDuplicate(arr: Array<number>): boolean {
     }
   });
   return hasDup;
+}
+
+export function bc(ups: Array<Vertex>, downs: Array<Vertex>) {
+  calcTwoLevelBaryCentric(ups, downs, {});
 }
