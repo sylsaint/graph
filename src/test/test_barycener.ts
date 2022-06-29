@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
-import { bc, calcTwoLevelBaryCentric } from '../algos/barycentric';
+import { baryCentric } from '../algos/barycentric';
 
 describe('BaryCentric Method', () => {
   let vertices: Array<Vertex> = [];
@@ -26,7 +26,7 @@ describe('BaryCentric Method', () => {
   const downs: Array<Vertex> = vertices.slice(4);
 
   it('Should minimize two level crossings', () => {
-    const { row, col, crossCount } = calcTwoLevelBaryCentric(ups, downs, {});
+    const { levels: [row, col], crossCount } = baryCentric([ups, downs], {});
     expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['d', 'a', 'b', 'c']);
     expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['g', 'e', 'i', 'f', 'h']);
     expect(crossCount).equal(7);
@@ -56,7 +56,7 @@ describe('BaryCentric Method', () => {
 
     const g: Graph = new Graph([...ups, ...downs], edges, { directed: true });
 
-    const { row, col, crossCount } = calcTwoLevelBaryCentric(ups, downs, {});
+    const { levels: [row, col], crossCount } = baryCentric([ups, downs], {});
     expect(row.map((v) => v.getOptions('key'))).to.deep.equal(['c', 'b', 'a']);
     expect(col.map((v) => v.getOptions('key'))).to.deep.equal(['j', 'g', 'd', 'k', 'h', 'e', 'l', 'i', 'f']);
     expect(crossCount).equal(0);
