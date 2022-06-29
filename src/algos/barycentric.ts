@@ -308,14 +308,14 @@ function upDownPhase(levels: Vertex[][]): MulLevelbaryCentricResult {
 
 export function calcMulLevelbaryCentric(
   levels: Vertex[][],
-  { currentRound = 1, totalRound = DEFAULT_TOTAL_ROUND, totalCross = 0 }: MulLevelbaryCentricOptions,
+  { currentRound = 1, totalRound = DEFAULT_TOTAL_ROUND, totalCross = Number.POSITIVE_INFINITY }: MulLevelbaryCentricOptions,
 ): MulLevelbaryCentricResult {
   const orderedLevels = [...levels];
   // no need to reorder
   if (levels.length <= 1) {
     return { levels: orderedLevels, totalCross: 0 };
   }
-  if (currentRound >= totalRound) {
+  if (currentRound >= totalRound || totalCross === 0) {
     return {
       levels: orderedLevels,
       totalCross,
@@ -338,7 +338,7 @@ export function calcMulLevelbaryCentric(
       return calcMulLevelbaryCentric(upDownLevels, { currentRound: currentRound + 1, totalCross: upDownCross });
     } else {
       // terminate if cross count can not be reduced
-      return { levels: orderedLevels, totalCross: totalCross };
+      return { levels: orderedLevels, totalCross };
     }
   }
 }

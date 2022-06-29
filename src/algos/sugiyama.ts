@@ -21,7 +21,7 @@ import { makeHierarchy } from './hierarchy';
 import { cloneGraph } from '../misc/graphUtil';
 import { LayoutOptions } from '../misc/interface';
 import { defaultOptions } from '../misc/constant';
-import { nbarycenter } from './barycentric';
+import { baryCentric } from './barycentric';
 import { position } from './brandeskopf';
 
 export class Sugiyama {
@@ -32,13 +32,14 @@ export class Sugiyama {
   private divide(g: Graph): Array<Graph> {
     return divide(g);
   }
-  private hierarchy(g: Graph): Array<Array<Vertex>> {
+  private hierarchy(g: Graph): Vertex[][] {
     return makeHierarchy(g);
   }
-  private cross(g: Graph, levels: Array<Array<Vertex>>): Array<Array<Vertex>> {
-    return nbarycenter(g, levels);
+  private cross(g: Graph, levels: Vertex[][]): Vertex[][] {
+    const { levels: orderedLevels } = baryCentric(levels, {});
+    return orderedLevels;
   }
-  private position(g: Graph, levels: Array<Array<Vertex>>, options?: LayoutOptions): Graph {
+  private position(g: Graph, levels: Vertex[][], options?: LayoutOptions): Graph {
     return position(g, levels, options);
   }
   public layout(g: Graph, options?: LayoutOptions): Array<Graph> {
@@ -48,7 +49,7 @@ export class Sugiyama {
     let merged: LayoutOptions = { ...defaultOptions, ...options };
     const { width, gutter } = merged;
     graphs.map(gi => {
-      let levels: Array<Array<Vertex>> = this.hierarchy(gi);
+      let levels: Vertex[][] = this.hierarchy(gi);
       levels = this.cross(gi, levels);
       const maxWidth: number = Math.max.apply(null, levels.map(lvl => lvl.length));
       let ordered: Graph = this.position(gi, levels, merged);
