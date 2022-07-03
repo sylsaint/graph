@@ -74,8 +74,8 @@ function getKey(key1: string | number, key2: string | number, reversed: boolean 
 
 /**
  *
- * @param prevLevel -- vertices at some level
- * @param nextLevel -- vertices at next level
+ * @param prevLevel vertices at some level
+ * @param nextLevel vertices at next level
  * @returns baryCentric coefficient of everty vertex in prevLeven and nextLevel
  */
 function calcbaryCentricCoefficient(prevLevel: Array<Vertex>, nextLevel: Array<Vertex>) {
@@ -103,9 +103,9 @@ function calcbaryCentricCoefficient(prevLevel: Array<Vertex>, nextLevel: Array<V
  *
  * @description this is a heuristic method which tries to reduce crossings. with calculating baryCentric coefficient of every vertex
  * and reordering vertext position, this method can reduce crossings effectively.
- * @param row -- vertices at some level, treated as row
- * @param col -- vertices at next level, treated as col
- * @param options -- configuration object to function
+ * @param row vertices at some level, treated as row
+ * @param col vertices at next level, treated as col
+ * @param options - configuration object to function
  * @returns
  */
 export function calcTwoLevelbaryCentric(
@@ -189,8 +189,8 @@ export function calcTwoLevelbaryCentric(
  *
  * @description if there are vertices in row/col which have the same baryCentric coefficient, this function would try to exchange
  * their positions in order to reduce crossings.
- * @param prevLevel -- vertices at some level
- * @param nextLevel -- vertices at next level
+ * @param prevLevel vertices at some level
+ * @param nextLevel vertices at next level
  * @returns baryCentric coefficient of everty vertex in prevLeven and nextLevel
  */
 function finetuneTwoLevelbaryCentric(
@@ -343,6 +343,12 @@ export function calcMulLevelbaryCentric(
   }
 }
 
+/**
+ * 
+ * @param levels arrays of vertices which have been layered
+ * @param options configuration to adjust total round, etc
+ * @returns reordered vertices of each level and minimum crossings reached
+ */
 export function baryCentric(levels: Vertex[][], options: baryCentricOptions = {}) {
   if (levels.length <= 1) return { levels, crossCount: 0 };
   if (levels.length === 2) {
