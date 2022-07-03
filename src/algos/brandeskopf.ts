@@ -10,7 +10,7 @@ export function position(g: Graph, levels: Array<Array<Vertex>>, options: Layout
   // initial horizontal position
   options = { ...defaultOptions, ...options };
   levels.map((level, h) => {
-    level.map(v => {
+    level.map((v) => {
       v.setOptions(PY, h);
     });
   });
@@ -36,7 +36,7 @@ function transformLayers(levels: Array<Array<Vertex>>, vertical: string, horizon
     transformed = transformed.reverse();
   }
   if (horizon === RIGHT) {
-    transformed = transformed.map(vertices => {
+    transformed = transformed.map((vertices) => {
       const rt: Array<Vertex> = [...vertices.reverse()];
       vertices.reverse();
       return rt;
@@ -82,7 +82,7 @@ function type1Conflicts(levels: Array<Array<Vertex>>) {
       if (mark) {
         while (l <= l1) {
           const vl: Vertex = levels[i + 1][l];
-          upperNeighbours(vl).map(ve => {
+          upperNeighbours(vl).map((ve) => {
             const k: number = getPos(ve[0]);
             if (k < k0 || k > k1) ve[1].setOptions('conflict', true);
           });
@@ -102,7 +102,7 @@ function hasInnerSegment(vn: Vertex): boolean {
   if (!isDummyNode(vn)) return false;
   let inner: boolean = false;
   const edges: Array<Edge> = vn.edges;
-  edges.map(edge => {
+  edges.map((edge) => {
     if (edge.down === vn && isDummyNode(edge.up)) {
       inner = true;
     }
@@ -113,7 +113,7 @@ function hasInnerSegment(vn: Vertex): boolean {
 function getUpper(v: Vertex): Vertex {
   let upper: Vertex = new Vertex(-1);
   const edges: Array<Edge> = v.edges;
-  edges.map(edge => {
+  edges.map((edge) => {
     if (edge.down === v) {
       upper = edge.up;
     }
@@ -128,7 +128,7 @@ function getPos(v: Vertex): number {
 function upperNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
   const edges: Array<Edge> = vn.edges;
   const ups: Array<[Vertex, Edge]> = [];
-  edges.map(edge => {
+  edges.map((edge) => {
     if (edge.down === vn) {
       ups.push([edge.up, edge]);
     }
@@ -139,7 +139,7 @@ function upperNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
 function lowerNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
   const edges: Array<Edge> = vn.edges;
   const downs: Array<[Vertex, Edge]> = [];
-  edges.map(edge => {
+  edges.map((edge) => {
     if (edge.up === vn) {
       downs.push([edge.down, edge]);
     }
@@ -164,8 +164,8 @@ function getLayeredNeighbours(v: Vertex, upOrDown: string): Array<[Vertex, Edge]
 function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOptions {
   const root: object = {};
   const align: object = {};
-  levels.map(vs => {
-    vs.map(v => {
+  levels.map((vs) => {
+    vs.map((v) => {
       root[v.id] = v.id;
       align[v.id] = v.id;
     });
@@ -178,7 +178,7 @@ function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOp
       let floor: number = Math.floor((neighbours.length + 1) / 2) - 1;
       let ceil: number = Math.ceil((neighbours.length + 1) / 2) - 1;
       const mrange = range(floor, ceil);
-      mrange.map(m => {
+      mrange.map((m) => {
         if (align[vki.id] === vki.id) {
           const neighbour: [Vertex, Edge] = neighbours[m];
           const um: Vertex = neighbour[0];
@@ -211,8 +211,8 @@ function horizontalCompaction(
   const sink: object = {};
   const shift: object = {};
   const xcoordinate: object = {};
-  levels.map(vertices => {
-    vertices.map(v => {
+  levels.map((vertices) => {
+    vertices.map((v) => {
       sink[v.id] = v.id;
       shift[v.id] = Number.POSITIVE_INFINITY;
     });
@@ -222,8 +222,8 @@ function horizontalCompaction(
   placeBlock(levels, bkOptions, options, xcoordinate);
   // calculate absolute position
   const xs: object = {};
-  levels.map(vertices => {
-    vertices.map(v => {
+  levels.map((vertices) => {
+    vertices.map((v) => {
       xs[v.id] = xcoordinate[root[v.id]];
       if (shift[sink[root[v.id]]] < Number.POSITIVE_INFINITY) {
         xs[v.id] = xs[v.id] + shift[sink[root[v.id]]];
@@ -269,7 +269,10 @@ function findSmallestWidth(xss: object): number {
   for (let h of [LEFT, RIGHT]) {
     for (let v of [UPPER, LOWER]) {
       const xs: object = xss[`${h}-${v}`];
-      const width: number = Math.max.apply(null, Object.keys(xs).map(key => xs[key]));
+      const width: number = Math.max.apply(
+        null,
+        Object.keys(xs).map((key) => xs[key]),
+      );
       if (width < smallestWidth) {
         smallestWidth = width;
         align = h;
@@ -282,10 +285,10 @@ function findSmallestWidth(xss: object): number {
 function reversePos(xs: object): object {
   let max: number = 0;
   const rt: object = {};
-  Object.keys(xs).map(key => {
+  Object.keys(xs).map((key) => {
     if (xs[key] > max) max = xs[key];
   });
-  Object.keys(xs).map(key => {
+  Object.keys(xs).map((key) => {
     rt[key] = max - xs[key];
   });
   return rt;
@@ -294,9 +297,9 @@ function reversePos(xs: object): object {
 function balance(g: Graph, xss: object, options: LayoutOptions): Graph {
   const { width, height, gutter, padding } = options;
   const { left, top } = padding;
-  g.vertices.map(v => {
+  g.vertices.map((v) => {
     const posList: Array<number> = Object.keys(xss)
-      .map(key => xss[key][v.id])
+      .map((key) => xss[key][v.id])
       .sort();
     const xs: number = (posList[1] + posList[2]) / 2;
     v.setOptions('x', left + xs * (width + gutter));
