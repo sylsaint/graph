@@ -14,11 +14,12 @@ function getPos(vertex: Vertex, vertices: Vertex[], reversed = false): number {
   return vertex.getOptions('pos');
 }
 
-function getDownNeighborPos(vertex: Vertex, min: number): number {
+function getDownMedianNeighborPos(vertex: Vertex, min: number): number {
   const neighbors = vertex.edges.filter((edge) => edge.up.id === vertex.id).map((edge) => edge.down);
-  const highs = neighbors.filter((v) => v.getOptions('pos') >= min);
-  if (!highs.length) return -1;
-  return highs[0].getOptions('pos');
+  const highs = neighbors.filter(v => v.getOptions('pos') >= min);
+  if (highs.length) return highs[0].getOptions('pos');
+  if (neighbors.length) return neighbors[0].getOptions('pos');
+  return -1; 
 }
 
 function getConfictKey(from: Vertex, to: Vertex, reversed = false) {
@@ -34,12 +35,9 @@ function markVertexCoflict(
   conflictResult: ConflictResult,
 ): ConflictResult {
   const downVertices = left.edges.filter((edge) => edge.up.id === left.id).map((edge) => edge.down);
-  const isUpSame = left.id === right.id;
-  const isDownSame = k0 === k1;
-  if (isUpSame && isDownSame) return conflictResult;
   const crossed = downVertices.filter((vertex) => {
     const pos = vertex.getOptions('pos');
-    return isUpSame ? (pos < k0 || pos > k1) : (pos <= k0 || pos >= k1);
+    return (pos < k0 || pos > k1);
   });
   crossed.map((v) => {
     conflictResult[getConfictKey(left, v)] = true;
@@ -66,8 +64,9 @@ export function markConflicts(
       k1 = levels[i+1].length - 1,
       l0 = 0;
     for (let l1 = 1; l1 < horizonWidth; l1++) {
-      k1 = getDownNeighborPos(vertices[l1], k0);
+      k1 = getDownMedianNeighborPos(vertices[l1], k0);
       if (k1 === -1) continue;
+      if (k1 < k0) k1 = k0;
       for (; l0 <= l1; l0++) {
         markVertexCoflict(vertices[l0], vertices[l1], k0, k1, conflictResult);
       }
@@ -117,9 +116,9 @@ export function alignVertices(
     reorderedLevels.reverse();
   }
   if (!horizonOrder) {
-    console.log(reorderedLevels.map(vertices => vertices.map(v => v.id).join(',')).join('\n'));
+    // console.log(reorderedLevels.map(vertices => vertices.map(v => v.id).join(',')).join('\n'));
     reorderedLevels.map((vertices) => vertices.reverse());
-    console.log(reorderedLevels.map(vertices => vertices.map(v => v.id).join(',')).join('\n'));
+    // console.log(reorderedLevels.map(vertices => vertices.map(v => v.id).join(',')).join('\n'));
   }
   for (let vi = 1; vi < reorderedLevels.length; vi++) {
     let r = 0;
@@ -158,5 +157,4 @@ export function brandeskopf(levels: Vertex[][]) {
       align = nextAlign;
     });
   });
-  console.log(align);
 }
