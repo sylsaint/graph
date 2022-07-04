@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
-import { position } from '../algos/brandeskopf';
+import { markConflicts, alignVertices, brandeskopf } from '../algos/brandeskopf';
 import { DUMMY } from '../misc/constant';
 
-describe('Position layout bk', () => {
+describe('Position layout bk new', () => {
   let vertices: Array<Vertex> = [];
   for (let i: number = 0; i < 26; i++) {
     vertices.push(new Vertex(i));
@@ -70,8 +70,14 @@ describe('Position layout bk', () => {
       nLevels[idx].push(vertices[i])
     }
   })
-  it('#layout', () => {
-    position(g, nLevels);
-    console.log('nlevels position...');
+  it('should mark conflicts correctly', () => {
+    const conflicts = markConflicts(nLevels);
+  });
+  it('should align correctly', () => {
+    const conflicts = markConflicts(nLevels);
+    const { root, align } = alignVertices(nLevels, { conflicts });
+  });
+  it('should brandeskopf correctly', () => {
+    brandeskopf(nLevels, { width: 100, height: 20, gutter: 5, padding: { left: 0, top: 0, right: 0, bottom: 0 } });
   });
 });

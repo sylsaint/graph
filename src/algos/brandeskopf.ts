@@ -1,312 +1,353 @@
-import Graph, { Vertex, Edge } from '../misc/graph';
-import { LayoutOptions, BKOptions } from '../misc/interface';
-import { defaultOptions, LEFT, RIGHT, UPPER, LOWER, DUMMY, PY } from '../misc/constant';
-import { range } from '../misc/misc';
+import { Vertex } from '../misc/graph';
+import { LayoutOptions } from '../misc/interface';
 
-/*
- * Based on Ulrik Brandes and Boris Kopf paper "Fast and Simple Horizontal Coordinate Assignment"
- */
-export function position(g: Graph, levels: Array<Array<Vertex>>, options: LayoutOptions = defaultOptions): Graph {
-  // initial horizontal position
-  options = { ...defaultOptions, ...options };
-  levels.map((level, h) => {
-    level.map((v) => {
-      v.setOptions(PY, h);
-    });
+export type VertexIdMap = { [key: string | number]: string | number };
+export type VertexIdNumberMap = { [key: string | number]: number };
+export type IdVertexMap = { [key: string | number]: Vertex };
+
+function getPos(vertex: Vertex, vertices: Vertex[], reversed = false): number {
+  if (reversed) return vertices.length - vertex.getOptions('pos') - 1;
+  return vertex.getOptions('pos');
+}
+
+function getPrev(vertex: Vertex, reversed = false): number {
+  if (reversed) return vertex.getOptions('next');
+  return vertex.getOptions('prev');
+}
+
+function getNext(vertex: Vertex, reversed = false): number {
+  if (reversed) return vertex.getOptions('prev');
+  return vertex.getOptions('next');
+}
+
+function getDownMedianNeighborPos(vertex: Vertex, min: number): number {
+  const neighbors = vertex.edges.filter((edge) => edge.up.id === vertex.id).map((edge) => edge.down);
+  const highs = neighbors.filter((v) => v.getOptions('pos') >= min);
+  if (highs.length) return highs[0].getOptions('pos');
+  if (neighbors.length) return neighbors[0].getOptions('pos');
+  return -1;
+}
+
+function getConfictKey(from: Vertex, to: Vertex, reversed = false) {
+  if (reversed) return `${to.id}_|_${from.id}`;
+  return `${from.id}_|_${to.id}`;
+}
+
+function markVertexCoflict(
+  left: Vertex,
+  right: Vertex,
+  k0: number,
+  k1: number,
+  conflictResult: ConflictResult,
+): ConflictResult {
+  const downVertices = left.edges.filter((edge) => edge.up.id === left.id).map((edge) => edge.down);
+  const crossed = downVertices.filter((vertex) => {
+    const pos = vertex.getOptions('pos');
+    return pos < k0 || pos > k1;
   });
-  preprocess(levels);
-  type1Conflicts(levels);
-  const xss: object = {};
-  for (let h of [LEFT, RIGHT]) {
-    for (let v of [UPPER, LOWER]) {
-      const transformed = transformLayers(levels, v, h);
-      preprocess(transformed);
-      const bkOptions: BKOptions = verticalAlignment(transformed, v);
-      const { root, align } = bkOptions;
-      const xs: object = horizontalCompaction(transformed, bkOptions, options, h);
-      xss[`${h}-${v}`] = xs;
-    }
-  }
-  return balance(g, xss, options);
-}
-
-function transformLayers(levels: Array<Array<Vertex>>, vertical: string, horizon: string): Array<Array<Vertex>> {
-  let transformed: Array<Array<Vertex>> = [...levels];
-  if (vertical === LOWER) {
-    transformed = transformed.reverse();
-  }
-  if (horizon === RIGHT) {
-    transformed = transformed.map((vertices) => {
-      const rt: Array<Vertex> = [...vertices.reverse()];
-      vertices.reverse();
-      return rt;
-    });
-  }
-  return transformed;
-}
-
-function preprocess(levels: Array<Array<Vertex>>) {
-  levels.map((level, h) => {
-    level.map((v, idx) => {
-      v.setOptions('order', idx);
-    });
+  crossed.map((v) => {
+    conflictResult[getConfictKey(left, v)] = true;
   });
+  return conflictResult;
 }
 
-/*
- * Type 1 conflicts arise when a non-inner segment crosses an inner segment.
- * Again because vertical inner segments are preferable, they are resolved in favor
- * of the inner segment. The algorithm traverses layers from left to right (index l) while
- * maintaining the upper neighbors, v(i)^k0 and v(i)^k1 , of the two closest inner segments.
- */
-function type1Conflicts(levels: Array<Array<Vertex>>) {
-  const ht: number = levels.length;
-  for (let i: number = 1; i < ht - 1; i++) {
-    let k0: number = 0,
-      l: number = 1;
-    const wh: number = levels[i + 1].length;
-    for (let l1: number = 0; l1 < wh; l1++) {
-      const vn: Vertex = levels[i + 1][l1];
-      let mark: boolean = false;
-      let k1: number = levels[i].length - 1;
-      if (l1 === wh - 1) {
-        mark = true;
+function preprocess(levels: Vertex[][]): IdVertexMap {
+  const vertexMap: IdVertexMap = {};
+  levels.map((vertices, lvl) =>
+    vertices.map((v, i) => {
+      // add level to every vertex
+      v.setOptions('level', lvl);
+      // add pos to every vertex
+      v.setOptions('pos', i);
+      // add prev and next to every vertex
+      v.setOptions('prev', vertices[i - 1]?.id);
+      v.setOptions('next', vertices[i + 1]?.id);
+      // add to map
+      vertexMap[v.id] = v;
+    }),
+  );
+  return vertexMap;
+}
+
+export type ConflictResult = {
+  [key: string]: boolean;
+};
+
+export function markConflicts(levels: Vertex[][]): ConflictResult {
+  const conflictResult: ConflictResult = {};
+  // mark type 0, 1, 2 conflicts in linear time
+  const verticalDepth = levels.length;
+  for (let i = 0; i < verticalDepth - 1; i++) {
+    const horizonWidth = levels[i].length;
+    const vertices = levels[i];
+    let k0 = 0,
+      k1 = levels[i + 1].length - 1,
+      l0 = 0;
+    for (let l1 = 1; l1 < horizonWidth; l1++) {
+      k1 = getDownMedianNeighborPos(vertices[l1], k0);
+      if (k1 === -1) continue;
+      if (k1 < k0) k1 = k0;
+      for (; l0 <= l1; l0++) {
+        markVertexCoflict(vertices[l0], vertices[l1], k0, k1, conflictResult);
       }
-      if (hasInnerSegment(vn)) {
-        mark = true;
-        const vu: Vertex = getUpper(vn);
-        if (vu.id > 0) {
-          k1 = getPos(vu);
-        }
-      }
-      if (mark) {
-        while (l <= l1) {
-          const vl: Vertex = levels[i + 1][l];
-          upperNeighbours(vl).map((ve) => {
-            const k: number = getPos(ve[0]);
-            if (k < k0 || k > k1) ve[1].setOptions('conflict', true);
-          });
-          l += 1;
-        }
-        k0 = k1;
-      }
+      k0 = k1;
     }
   }
+  return conflictResult;
 }
 
-function isDummyNode(v: Vertex): boolean {
-  return v.getOptions('type') === DUMMY;
+function getUpperMedianNeighbors(vertex: Vertex, verticalOrder = true): Vertex[] {
+  let upperNeighbours = vertex.edges.filter((edge) => edge.up.id === vertex.id).map((edge) => edge.down);
+  if (!verticalOrder)
+    upperNeighbours = vertex.edges.filter((edge) => edge.down.id === vertex.id).map((edge) => edge.up);
+  const upperLength = upperNeighbours.length;
+  if (upperLength === 0) return [];
+  if (upperLength % 2 === 1) return [upperNeighbours[(upperLength - 1) / 2]];
+  return [upperNeighbours[upperLength / 2 - 1], upperNeighbours[upperLength / 2]];
 }
 
-function hasInnerSegment(vn: Vertex): boolean {
-  if (!isDummyNode(vn)) return false;
-  let inner: boolean = false;
-  const edges: Array<Edge> = vn.edges;
-  edges.map((edge) => {
-    if (edge.down === vn && isDummyNode(edge.up)) {
-      inner = true;
-    }
-  });
-  return inner;
-}
+export type AlignOptions = {
+  conflicts: ConflictResult;
+  root?: Map<string | number, string | number>;
+  align?: Map<string | number, string | number>;
+  horizonOrder?: boolean;
+  verticalOrder?: boolean;
+};
 
-function getUpper(v: Vertex): Vertex {
-  let upper: Vertex = new Vertex(-1);
-  const edges: Array<Edge> = v.edges;
-  edges.map((edge) => {
-    if (edge.down === v) {
-      upper = edge.up;
-    }
-  });
-  return upper;
-}
+export type AlignResult = {
+  root: Map<string | number, string | number>;
+  align: Map<string | number, string | number>;
+};
 
-function getPos(v: Vertex): number {
-  return v.getOptions('order');
-}
-
-function upperNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
-  const edges: Array<Edge> = vn.edges;
-  const ups: Array<[Vertex, Edge]> = [];
-  edges.map((edge) => {
-    if (edge.down === vn) {
-      ups.push([edge.up, edge]);
-    }
-  });
-  return ups;
-}
-
-function lowerNeighbours(vn: Vertex): Array<[Vertex, Edge]> {
-  const edges: Array<Edge> = vn.edges;
-  const downs: Array<[Vertex, Edge]> = [];
-  edges.map((edge) => {
-    if (edge.up === vn) {
-      downs.push([edge.down, edge]);
-    }
-  });
-  return downs;
-}
-
-function getLayeredNeighbours(v: Vertex, upOrDown: string): Array<[Vertex, Edge]> {
-  if (upOrDown === UPPER) return upperNeighbours(v);
-  return lowerNeighbours(v);
-}
-
-/*
- * Vertical Alignment
- * in every layer we process the vertices from left to right and for each vertex we
- * consider its median upper neighbor (its left and right median upper neighbor, in
- * this order, if there are two). The pair is aligned, if no conflicting alignment is
- * left of this one. The resulting bias is mediated by the fact that the symmetric bias
- * is applied in one of the other three assignments.
- */
-
-function verticalAlignment(levels: Array<Array<Vertex>>, vertical: string): BKOptions {
-  const root: object = {};
-  const align: object = {};
-  levels.map((vs) => {
-    vs.map((v) => {
-      root[v.id] = v.id;
-      align[v.id] = v.id;
-    });
-  });
-  levels.map((vertices, i) => {
-    let r: number = -1;
-    vertices.map((vki, k) => {
-      const neighbours: Array<[Vertex, Edge]> = getLayeredNeighbours(vki, vertical);
-      if (!neighbours.length) return;
-      let floor: number = Math.floor((neighbours.length + 1) / 2) - 1;
-      let ceil: number = Math.ceil((neighbours.length + 1) / 2) - 1;
-      const mrange = range(floor, ceil);
-      mrange.map((m) => {
-        if (align[vki.id] === vki.id) {
-          const neighbour: [Vertex, Edge] = neighbours[m];
-          const um: Vertex = neighbour[0];
-          const edge: Edge = neighbour[1];
-          const pos: number = getPos(um);
-          const rpos: boolean = r < pos;
-          if (!edge.getOptions('conflict') && rpos) {
-            align[um.id] = vki.id;
-            root[vki.id] = root[um.id];
-            align[vki.id] = root[vki.id];
-            r = pos;
+export function alignVertices(
+  levels: Vertex[][],
+  { root = new Map(), align = new Map(), horizonOrder = true, verticalOrder = true, conflicts }: AlignOptions,
+): AlignResult {
+  const reorderedLevels = [...levels];
+  if (root.size === 0 && align.size === 0) {
+    levels
+      .flatMap((vertices) => vertices)
+      .map((v) => {
+        root.set(v.id, v.id);
+        align.set(v.id, v.id);
+      });
+  }
+  if (verticalOrder) {
+    reorderedLevels.reverse();
+  }
+  if (!horizonOrder) {
+    reorderedLevels.map((vertices) => vertices.reverse());
+  }
+  for (let vi = 1; vi < reorderedLevels.length; vi++) {
+    let r = 0;
+    for (let hi = 0; hi < reorderedLevels[vi].length; hi++) {
+      const vertex = reorderedLevels[vi][hi];
+      const upperNeighbours = getUpperMedianNeighbors(vertex, verticalOrder);
+      upperNeighbours.map((um) => {
+        const posUm = getPos(um, reorderedLevels[vi - 1], !horizonOrder);
+        if (align.get(vertex.id) === vertex.id) {
+          if (!conflicts[getConfictKey(um, vertex)] && r < posUm) {
+            align.set(um.id, vertex.id);
+            root.set(vertex.id, root.get(um.id) as string | number);
+            align.set(vertex.id, root.get(vertex.id) as string | number);
+            r = posUm;
           }
         }
       });
-    });
-  });
-  return { root, align, sink: {}, shift: {} };
+    }
+  }
+  return { root, align };
 }
 
-/*
- * horizontal compaction
+export type CompactionOptions = {
+  levels: Vertex[][];
+  root: Map<string | number, string | number>;
+  align: Map<string | number, string | number>;
+  horizonOrder: boolean;
+  verticalOrder: boolean;
+  vertexMap?: IdVertexMap;
+};
+
+export type CompactionResult = {
+  sink: VertexIdMap;
+  shift: VertexIdNumberMap;
+  xcoords: VertexIdNumberMap;
+};
+
+export function compact({
+  root,
+  align,
+  horizonOrder = true,
+  verticalOrder = true,
+  vertexMap = {},
+  levels,
+}: CompactionOptions) {
+  const sink: VertexIdMap = {};
+  const shift: VertexIdNumberMap = {};
+  let xcoords: VertexIdNumberMap = {};
+  let selfRoot: (string | number)[] = [];
+  const vertices: (string | number)[] = [];
+  root.forEach((_value, key) => {
+    vertices.push(key);
+  });
+  vertices.map((vid) => {
+    sink[vid] = vid;
+    shift[vid] = Number.POSITIVE_INFINITY;
+    if (vid === root.get(vid)) selfRoot.push(vid);
+  });
+
+  // sort root
+  const ordered: (string | number)[] = [];
+  const sortMap: { [key: string | number]: (string | number)[] } = {};
+  selfRoot.map((vid) => {
+    const prevVid = getPrev(vertexMap[vid], !horizonOrder);
+    if (prevVid !== undefined) {
+      const prevRootId = root.get(prevVid) as string | number;
+      if (!sortMap[prevRootId]) {
+        sortMap[prevRootId] = [vid];
+      } else {
+        sortMap[prevRootId].push(vid);
+      }
+    }
+    const nextVid = getNext(vertexMap[vid], !horizonOrder);
+    if (nextVid !== undefined) {
+      const nextRootId = root.get(nextVid) as string | number;
+      if (!sortMap[vid]) {
+        sortMap[vid] = [nextRootId];
+      } else {
+        sortMap[vid].push(nextRootId);
+      }
+    }
+  });
+
+  while (selfRoot.length) {
+    const tails: { [key: string | number]: boolean } = {};
+    selfRoot.map((vid) => {
+      sortMap[vid]?.map((tid) => {
+        tails[tid] = true;
+      });
+    });
+    const heads = selfRoot.filter((vid) => !tails[vid]);
+    heads.map((vid) => {
+      ordered.push(vid);
+      delete sortMap[vid];
+    });
+    selfRoot = selfRoot.filter((vid) => !heads.includes(vid));
+  }
+
+  // root coordinates relative to sink
+  ordered.map(
+    (vid) =>
+      (xcoords = placeBlock(vid, {
+        root,
+        align,
+        sink,
+        shift,
+        xcoords,
+        verticalOrder,
+        horizonOrder,
+        vertexMap,
+        levels,
+      })),
+  );
+
+  // absolute coordinates
+  vertices.map((vid) => {
+    const rootVid = root.get(vid) as string | number;
+    xcoords[vid] = xcoords[rootVid];
+    if (shift[sink[rootVid]] < Number.POSITIVE_INFINITY) {
+      xcoords[vid] += shift[sink[rootVid]];
+    }
+  });
+  return { sink, shift, xcoords };
+}
+
+export type BlockOptions = CompactionOptions & CompactionResult;
+
+/**
+ * @description mutant of original without recursion
+ * @param v
+ * @param options
  */
-function horizontalCompaction(
-  levels: Array<Array<Vertex>>,
-  bkOptions: BKOptions,
-  options: LayoutOptions,
-  horizon: string,
-): object {
-  const { root } = bkOptions;
-  const sink: object = {};
-  const shift: object = {};
-  const xcoordinate: object = {};
-  levels.map((vertices) => {
-    vertices.map((v) => {
-      sink[v.id] = v.id;
-      shift[v.id] = Number.POSITIVE_INFINITY;
-    });
-  });
-  bkOptions.shift = shift;
-  bkOptions.sink = sink;
-  placeBlock(levels, bkOptions, options, xcoordinate);
-  // calculate absolute position
-  const xs: object = {};
-  levels.map((vertices) => {
-    vertices.map((v) => {
-      xs[v.id] = xcoordinate[root[v.id]];
-      if (shift[sink[root[v.id]]] < Number.POSITIVE_INFINITY) {
-        xs[v.id] = xs[v.id] + shift[sink[root[v.id]]];
-      }
-    });
-  });
-  if (horizon === RIGHT) {
-    return reversePos(xs);
+function placeBlock(vid: string | number, options: BlockOptions): VertexIdNumberMap {
+  const { sink, shift, root, align, xcoords, vertexMap = {}, levels, horizonOrder } = options;
+  const delta = 1;
+  // vertex has been handled
+  if (xcoords[vid] !== undefined) {
+    return xcoords;
   }
-  return xs;
-}
-
-function placeBlock(levels: Array<Array<Vertex>>, bkOptions: BKOptions, options: LayoutOptions, xcoordinate: object) {
-  // place block
-  // modified version of original without recursion
-  // find largest width of levels
-  const { sink, shift, root, align } = bkOptions;
-  const { delta } = options;
-  for (let v = 0; v < levels.length; v++) {
-    for (let h = 0; h < levels[v].length; h++) {
-      const vx: Vertex = levels[v][h];
-      const vrid: any = root[vx.id];
-      if (xcoordinate[vrid] === undefined) {
-        xcoordinate[vrid] = 0;
-      }
-      if (h > 0) {
-        const pred: Vertex = levels[v][h - 1];
-        const urid: any = root[pred.id];
-        if (sink[vrid] === vrid) sink[vrid] = sink[urid];
-        if (sink[vrid] !== sink[urid]) {
-          shift[sink[urid]] = Math.min(shift[sink[urid]], xcoordinate[vrid] - xcoordinate[urid] - delta);
-        } else {
-          xcoordinate[vrid] = Math.max(xcoordinate[vrid], xcoordinate[urid] + delta);
-        }
-      }
+  xcoords[vid] = 0;
+  let w = vid;
+  do {
+    const vertex = vertexMap[w];
+    if (getPos(vertex, levels[vertex.getOptions('level')], !horizonOrder) === 0) {
+      w = align.get(w) as string | number;
+      continue;
     }
-  }
-}
-
-function findSmallestWidth(xss: object): number {
-  let smallestWidth: number = Number.POSITIVE_INFINITY;
-  let align: string = '';
-  for (let h of [LEFT, RIGHT]) {
-    for (let v of [UPPER, LOWER]) {
-      const xs: object = xss[`${h}-${v}`];
-      const width: number = Math.max.apply(
-        null,
-        Object.keys(xs).map((key) => xs[key]),
-      );
-      if (width < smallestWidth) {
-        smallestWidth = width;
-        align = h;
-      }
+    const u = root.get(getPrev(vertex, !horizonOrder)) as string | number;
+    if (sink[vid] === vid) sink[vid] = sink[u];
+    if (sink[vid] !== sink[u]) {
+      shift[sink[u]] = Math.min(shift[sink[u]], xcoords[vid] - xcoords[u] - delta);
+    } else {
+      xcoords[vid] = Math.max(xcoords[vid], xcoords[u] + delta);
     }
-  }
-  return smallestWidth;
+    w = align.get(w) as string | number;
+  } while (w !== vid);
+  return xcoords;
 }
 
-function reversePos(xs: object): object {
-  let max: number = 0;
-  const rt: object = {};
-  Object.keys(xs).map((key) => {
-    if (xs[key] > max) max = xs[key];
-  });
-  Object.keys(xs).map((key) => {
-    rt[key] = max - xs[key];
-  });
-  return rt;
-}
-
-function balance(g: Graph, xss: object, options: LayoutOptions): Graph {
+function balance(levels: Vertex[][], xss: VertexIdNumberMap[], options: LayoutOptions): Vertex[][] {
   const { width, height, gutter, padding } = options;
   const { left, top } = padding;
-  g.vertices.map((v) => {
-    const posList: Array<number> = Object.keys(xss)
-      .map((key) => xss[key][v.id])
-      .sort();
-    const xs: number = (posList[1] + posList[2]) / 2;
-    v.setOptions('x', left + xs * (width + gutter));
-    v.setOptions('y', top + v.getOptions(PY) * (height + gutter));
-    v.removeOptions(PY);
-    v.removeOptions('order');
-    v.removeOptions('conflict');
+  levels
+    .flatMap((vertices) => vertices)
+    .map((v) => {
+      const posList: number[] = xss.map((map) => map[v.id]);
+      posList.sort();
+      const xs: number = (posList[1] + posList[2]) / 2;
+      v.setOptions('x', left + xs * (width + gutter));
+      v.setOptions('y', top + v.getOptions('level') * (height + gutter));
+    });
+  return levels;
+}
+
+function normalize(xcoords: VertexIdNumberMap, reversed = false): VertexIdNumberMap {
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  Object.keys(xcoords).map((key) => {
+    if (xcoords[key] < min) min = xcoords[key];
+    if (xcoords[key] > max) max = xcoords[key];
   });
-  return g;
+  const width = max - min;
+  Object.keys(xcoords).map((key) => {
+    xcoords[key] = xcoords[key] + Math.abs(min);
+    if (reversed) xcoords[key] = width - xcoords[key];
+  });
+  return xcoords;
+}
+
+export function brandeskopf(
+  levels: Vertex[][],
+  layoutOptions: LayoutOptions = {
+    width: 100,
+    height: 20,
+    gutter: 5,
+    padding: { top: 0, left: 0, right: 0, bottom: 0 },
+  },
+) {
+  const vertexMap = preprocess(levels);
+  const conflicts = markConflicts(levels);
+  const xss: VertexIdNumberMap[] = [];
+  [true, false].map((verticalOrder) => {
+    [true, false].map((horizonOrder) => {
+      const { root, align } = alignVertices(levels, {
+        conflicts,
+        verticalOrder,
+        horizonOrder,
+      });
+      const { xcoords } = compact({ root, align, horizonOrder, verticalOrder, vertexMap, levels });
+      xss.push(normalize(xcoords, !horizonOrder));
+    });
+  });
+  return balance(levels, xss, layoutOptions);
 }

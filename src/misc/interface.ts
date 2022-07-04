@@ -5,7 +5,6 @@ export interface LayoutOptions {
   gutter: number;
   width: number;
   height: number;
-  delta: number,
 }
 
 export interface Padding {

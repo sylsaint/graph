@@ -1,7 +1,7 @@
 {
   "name": "sgraph",
-  "version": "1.0.14",
-  "description": "",
+  "version": "1.1.0",
+  "description": "graph hierachy layout algorithm",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -13,7 +13,7 @@
   "scripts": {
     "test": "nyc mocha --require ts-node/register src/test/**/*.ts",
     "test-bary": "mocha --require ts-node/register src/test/test_barycener.ts",
-    "test-bk": "mocha --require ts-node/register src/test/test_bknew.ts",
+    "test-bk": "mocha --require ts-node/register src/test/test_bk.ts",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",

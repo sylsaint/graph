@@ -22,7 +22,7 @@ import { cloneGraph } from '../misc/graphUtil';
 import { LayoutOptions } from '../misc/interface';
 import { defaultOptions } from '../misc/constant';
 import { baryCentric } from './barycentric';
-import { position } from './brandeskopf';
+import { brandeskopf } from './brandeskopf';
 
 export class Sugiyama {
   constructor() { }
@@ -40,7 +40,8 @@ export class Sugiyama {
     return orderedLevels;
   }
   private position(g: Graph, levels: Vertex[][], options?: LayoutOptions): Graph {
-    return position(g, levels, options);
+    brandeskopf(levels, options);
+    return g;
   }
   public layout(g: Graph, options?: LayoutOptions): Array<Graph> {
     let finals: Array<Graph> = [];
