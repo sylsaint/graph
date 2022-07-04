@@ -136,7 +136,10 @@ export function alignVertices(
     reorderedLevels.reverse();
   }
   if (!horizonOrder) {
-    reorderedLevels.map((vertices) => vertices.reverse());
+    for(let i = 0; i < reorderedLevels.length; i++) {
+      reorderedLevels[i] = [...reorderedLevels[i]];
+      reorderedLevels[i].reverse();
+    }
   }
   for (let vi = 1; vi < reorderedLevels.length; vi++) {
     let r = 0;
