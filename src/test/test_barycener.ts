@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
 import { baryCentric } from '../algos/barycentric';
 import { vegetables } from './data/data';
+import { printVertices } from '../misc/graphUtil';
 
 describe('BaryCentric Method', () => {
   let vertices: Array<Vertex> = [];
@@ -157,6 +158,54 @@ describe('BaryCentric Method', () => {
     })
     const g: Graph = new Graph(vLevels.flatMap(vertices => vertices), edges, { directed: true });
     const { levels, crossCount } = baryCentric(vLevels, {});
+    expect(crossCount).equal(0);
+  })
+  it('Should minimize vegetable levels', () => {
+    const vMap: {[key: string]: Vertex } = {};
+    const vLevels = vegetables.map(vertices => {
+      return vertices.map(v => {
+        const vertex = new Vertex(v.id);
+        vMap[v.id] = vertex;
+        return vertex; 
+      });
+    })
+    const edges = vegetables.flatMap(vertices => {
+      return vertices.flatMap(v => {
+        return v.edges.map(edge => new Edge(vMap[edge.from], vMap[edge.to]));
+      });
+    })
+    const g: Graph = new Graph(vLevels.flatMap(vertices => vertices), edges, { directed: true });
+    const { levels, crossCount } = baryCentric(vLevels, {});
+    expect(crossCount).equal(0);
+  })
+  it('Should minimize crossings to zero', () => {
+    let vertices: Array<Vertex> = [];
+    for (let i = 0; i <= 11; i++) {
+      vertices.push(new Vertex(i));
+    }
+    vertices[0].setOptions('dummpy', true);
+    let edges: Array<Edge> = [];
+    edges.push(new Edge(vertices[1], vertices[3]));
+    edges.push(new Edge(vertices[3], vertices[4]));
+    edges.push(new Edge(vertices[3], vertices[5]));
+    edges.push(new Edge(vertices[3], vertices[6]));
+    edges.push(new Edge(vertices[3], vertices[7]));
+    edges.push(new Edge(vertices[3], vertices[8]));
+    edges.push(new Edge(vertices[4], vertices[9]));
+    edges.push(new Edge(vertices[5], vertices[10]));
+    edges.push(new Edge(vertices[5], vertices[0]));
+    edges.push(new Edge(vertices[0], vertices[11]));
+    edges.push(new Edge(vertices[10], vertices[11]));
+    const g: Graph = new Graph(vertices, edges, { directed: true });
+    const levels = [
+      [vertices[1], vertices[2]],
+      [vertices[3]],
+      [vertices[4], vertices[5], vertices[6], vertices[7], vertices[8]],
+      [vertices[9], vertices[10], vertices[0]],
+      [vertices[11]],
+    ];
+    const { levels: nLevels, crossCount } = baryCentric(levels, {});
+    printVertices(levels);
     expect(crossCount).equal(0);
   })
 });

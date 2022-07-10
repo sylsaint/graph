@@ -2,8 +2,10 @@ import { expect } from 'chai';
 import Graph, { Vertex, Edge } from '../misc/graph';
 import { markConflicts, alignVertices, brandeskopf } from '../algos/brandeskopf';
 import { DUMMY } from '../misc/constant';
+import { printVertices } from '../misc/graphUtil';
 
 describe('Position layout bk new', () => {
+  /*
   let vertices: Array<Vertex> = [];
   for (let i: number = 0; i < 26; i++) {
     vertices.push(new Vertex(i));
@@ -82,7 +84,7 @@ describe('Position layout bk new', () => {
     let vertices: Array<Vertex> = [];
     for (let i = 0; i <= 7; i++) {
       vertices.push(new Vertex(i));
-    } 
+    }
     let edges: Array<Edge> = [];
     edges.push(new Edge(vertices[1], vertices[2]));
     edges.push(new Edge(vertices[1], vertices[7]));
@@ -98,6 +100,52 @@ describe('Position layout bk new', () => {
       [vertices[7], vertices[2], vertices[4]],
       [vertices[3], vertices[6]],
     ];
-    brandeskopf(levels, { width: 100, height: 20, gutter: 5, padding: { left: 0, top: 0, right: 0, bottom: 0 } });
+    const sortLevels: Vertex[][] = brandeskopf(levels, {
+      width: 100,
+      height: 20,
+      gutter: 5,
+      padding: { left: 0, top: 0, right: 0, bottom: 0 },
+    });
+    for (let i = 0; i < sortLevels.length; i++) {
+      console.log(sortLevels[i].map((v) => `${v.id}: ${v.getOptions('x')}`).join(' , '));
+    }
+  });
+  */
+  it('should brandeskopf correctly with tvision nodes', () => {
+    let vertices: Array<Vertex> = [];
+    for (let i = 0; i <= 11; i++) {
+      vertices.push(new Vertex(i));
+    }
+    vertices[0].setOptions('dummpy', true);
+    let edges: Array<Edge> = [];
+    edges.push(new Edge(vertices[1], vertices[3]));
+    edges.push(new Edge(vertices[3], vertices[4]));
+    edges.push(new Edge(vertices[3], vertices[5]));
+    edges.push(new Edge(vertices[3], vertices[6]));
+    edges.push(new Edge(vertices[3], vertices[7]));
+    edges.push(new Edge(vertices[3], vertices[8]));
+    edges.push(new Edge(vertices[4], vertices[9]));
+    edges.push(new Edge(vertices[5], vertices[10]));
+    edges.push(new Edge(vertices[5], vertices[0]));
+    edges.push(new Edge(vertices[0], vertices[11]));
+    edges.push(new Edge(vertices[10], vertices[11]));
+    const g: Graph = new Graph(vertices, edges, { directed: true });
+    const levels = [
+      [vertices[1], vertices[2]],
+      [vertices[3]],
+      [vertices[4], vertices[5], vertices[6], vertices[7], vertices[8]],
+      [vertices[9], vertices[10], vertices[0]],
+      [vertices[11]],
+    ];
+    const sortLevels: Vertex[][] = brandeskopf(levels, {
+      width: 100,
+      height: 20,
+      gutter: 5,
+      padding: { left: 0, top: 0, right: 0, bottom: 0 },
+    });
+    for (let i = 0; i < sortLevels.length; i++) {
+      console.log(sortLevels[i].map((v) => `${v.id}: ${v.getOptions('x')}`).join(' , '));
+    }
+    printVertices(sortLevels);
   });
 });

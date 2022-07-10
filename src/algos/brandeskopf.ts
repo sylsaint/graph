@@ -96,14 +96,18 @@ export function markConflicts(levels: Vertex[][]): ConflictResult {
   return conflictResult;
 }
 
-function getUpperMedianNeighbors(vertex: Vertex, verticalOrder = true): Vertex[] {
-  let upperNeighbours = vertex.edges.filter((edge) => edge.up.id === vertex.id).map((edge) => edge.down);
+function getUpperMedianNeighbors(vertex: Vertex, verticalOrder = true, horizonOrder = true): Vertex[] {
+  let upperNeighbours = vertex.edges.filter((edge) => edge.down.id === vertex.id).map((edge) => edge.up);
   if (!verticalOrder)
-    upperNeighbours = vertex.edges.filter((edge) => edge.down.id === vertex.id).map((edge) => edge.up);
+    upperNeighbours = vertex.edges.filter((edge) => edge.up.id === vertex.id).map((edge) => edge.down);
   const upperLength = upperNeighbours.length;
   if (upperLength === 0) return [];
   if (upperLength % 2 === 1) return [upperNeighbours[(upperLength - 1) / 2]];
-  return [upperNeighbours[upperLength / 2 - 1], upperNeighbours[upperLength / 2]];
+  if (horizonOrder) {
+    return [upperNeighbours[upperLength / 2 - 1], upperNeighbours[upperLength / 2]];
+  } else {
+    return [upperNeighbours[upperLength / 2], upperNeighbours[upperLength / 2 - 1]];
+  }
 }
 
 export type AlignOptions = {
@@ -132,7 +136,7 @@ export function alignVertices(
         align.set(v.id, v.id);
       });
   }
-  if (verticalOrder) {
+  if (!verticalOrder) {
     reorderedLevels.reverse();
   }
   if (!horizonOrder) {
@@ -142,10 +146,10 @@ export function alignVertices(
     }
   }
   for (let vi = 1; vi < reorderedLevels.length; vi++) {
-    let r = 0;
+    let r = -1;
     for (let hi = 0; hi < reorderedLevels[vi].length; hi++) {
       const vertex = reorderedLevels[vi][hi];
-      const upperNeighbours = getUpperMedianNeighbors(vertex, verticalOrder);
+      const upperNeighbours = getUpperMedianNeighbors(vertex, verticalOrder, horizonOrder);
       upperNeighbours.map((um) => {
         const posUm = getPos(um, reorderedLevels[vi - 1], !horizonOrder);
         if (align.get(vertex.id) === vertex.id) {
@@ -306,15 +310,14 @@ function balance(levels: Vertex[][], xss: VertexIdNumberMap[], options: LayoutOp
     .flatMap((vertices) => vertices)
     .map((v) => {
       const posList: number[] = xss.map((map) => map[v.id]);
-      posList.sort();
-      const xs: number = (posList[1] + posList[2]) / 2;
+      const xs: number = posList.reduce((prev, cur) => prev + cur, 0) / posList.length;
       v.setOptions('x', left + xs * (width + gutter));
       v.setOptions('y', top + v.getOptions('level') * (height + gutter));
     });
   return levels;
 }
 
-function normalize(xcoords: VertexIdNumberMap, reversed = false): VertexIdNumberMap {
+function normalize(xcoords: VertexIdNumberMap, reversed = false): { xcoords: VertexIdNumberMap, width: number } {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   Object.keys(xcoords).map((key) => {
@@ -323,10 +326,14 @@ function normalize(xcoords: VertexIdNumberMap, reversed = false): VertexIdNumber
   });
   const width = max - min;
   Object.keys(xcoords).map((key) => {
-    xcoords[key] = xcoords[key] + Math.abs(min);
-    if (reversed) xcoords[key] = width - xcoords[key];
+    if (min < 0) {
+      xcoords[key] = xcoords[key] + Math.abs(min);
+    }
+    if (reversed) {
+      xcoords[key] = width - xcoords[key]; 
+    }
   });
-  return xcoords;
+  return { xcoords, width };
 }
 
 export function brandeskopf(
@@ -340,7 +347,7 @@ export function brandeskopf(
 ) {
   const vertexMap = preprocess(levels);
   const conflicts = markConflicts(levels);
-  const xss: VertexIdNumberMap[] = [];
+  const xss: { xcoords: VertexIdNumberMap; width: number }[] = [];
   [true, false].map((verticalOrder) => {
     [true, false].map((horizonOrder) => {
       const { root, align } = alignVertices(levels, {
@@ -352,5 +359,6 @@ export function brandeskopf(
       xss.push(normalize(xcoords, !horizonOrder));
     });
   });
-  return balance(levels, xss, layoutOptions);
+  const minWidthXss = xss.map(xs => xs.xcoords);
+  return balance(levels, minWidthXss, layoutOptions);
 }
