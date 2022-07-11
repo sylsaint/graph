@@ -5,7 +5,6 @@ import { DUMMY } from '../misc/constant';
 import { printVertices } from '../misc/graphUtil';
 
 describe('Position layout bk new', () => {
-  /*
   let vertices: Array<Vertex> = [];
   for (let i: number = 0; i < 26; i++) {
     vertices.push(new Vertex(i));
@@ -110,7 +109,6 @@ describe('Position layout bk new', () => {
       console.log(sortLevels[i].map((v) => `${v.id}: ${v.getOptions('x')}`).join(' , '));
     }
   });
-  */
   it('should brandeskopf correctly with tvision nodes', () => {
     let vertices: Array<Vertex> = [];
     for (let i = 0; i <= 11; i++) {
@@ -148,4 +146,40 @@ describe('Position layout bk new', () => {
     }
     printVertices(sortLevels);
   });
+  it('Should do right layout', () => {
+    let vertices: Array<Vertex> = [];
+    for (let i: number = 0; i < 10; i++) {
+      vertices.push(new Vertex(i));
+    }
+    // a, b, c, d, e, f, g, h, i, j,  k,  l
+    // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    let edges: Array<Edge> = [];
+    edges.push(new Edge(vertices[1], vertices[4]));
+    edges.push(new Edge(vertices[1], vertices[5]));
+    edges.push(new Edge(vertices[4], vertices[3]));
+    edges.push(new Edge(vertices[5], vertices[2]));
+    edges.push(new Edge(vertices[6], vertices[2]));
+    edges.push(new Edge(vertices[7], vertices[0]));
+    edges.push(new Edge(vertices[0], vertices[3]));
+    edges.push(new Edge(vertices[7], vertices[9]));
+    edges.push(new Edge(vertices[8], vertices[5]));
+  
+  
+    const g: Graph = new Graph(vertices, edges, { directed: true });
+    const levels = [
+      [vertices[1], vertices[8], vertices[7]],
+      [vertices[4], vertices[5], vertices[0], vertices[9], vertices[6]],
+      [vertices[3], vertices[2]],
+    ];
+    const sortLevels: Vertex[][] = brandeskopf(levels, {
+      width: 100,
+      height: 20,
+      gutter: 5,
+      padding: { left: 0, top: 0, right: 0, bottom: 0 },
+    });
+    for (let i = 0; i < sortLevels.length; i++) {
+      console.log(sortLevels[i].map((v) => `${v.id}: ${v.getOptions('x')}`).join(' , '));
+    }
+    printVertices(sortLevels);
+  })
 });
