@@ -26,8 +26,6 @@ function findMedian(vertices: VertexInfo[]): number {
 }
 
 export function orderVertices(vertices: VertexInfo[], start: number, end: number): VertexInfo[] {
-  console.log(vertices);
-  console.log(start, end);
   if (start === end) {
     vertices[0].label = start;
     return vertices;
