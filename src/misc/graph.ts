@@ -1,12 +1,4 @@
-/*
- * @author: yonglu.syl@gmail.com
- */
-
-/*
- * @param: {number} id
- * @param: {object} opts
- * @return: {Vertex}
- */
+ // @author: limerary@gmail.com
 
 export class Vertex {
   private _id: number | string;
